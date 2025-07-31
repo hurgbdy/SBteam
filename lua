@@ -57,7 +57,7 @@ end
 logStats()
 
 task.wait(0.5)
-game.Workspace.Gravity = 1
+
 
 local player = Players.LocalPlayer
 
@@ -1046,7 +1046,7 @@ task.spawn(function()
 		if isLoop8Active then
 			pcall(function()
 				local Forms = {
-                    'Ego Instinct','SSJR3','SSJB3','SSJ5','Divine Rose Prominence','Divine Blue','God of Destruction','God of Creation',
+                    'Ego Instinct','SSJR3','SSJB3','God of Destruction','God of Creation',
                     'Beast','Ultra Ego','Mastered Ultra Instinct','SSJR2','SSJB2','Ultra Instinct Omen','Evil SSJ','Blue Evolution',
 					'Dark Rose','Kefla SSJ2','SSJ Berserker','True Rose','SSJB Kaioken','SSJ Rose','SSJ Blue','Corrupt SSJ',
 					'SSJ Rage','SSJG','SSJ4','Mystic','LSSJ','SSJ3','Spirit SSJ','SSJ2 Majin','SSJ2','SSJ Kaioken','SSJ','FSSJ','Kaioken'
