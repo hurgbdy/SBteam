@@ -747,15 +747,21 @@ local function assignQuest()
     end
 end
 
+local TweenService = game:GetService("TweenService")
 local isTakingQuest = false
 
-local function safeMoveTo(position)
+local function safeTeleportTo(targetCFrame)
     local character = player.Character
-    local humanoid = character and character:FindFirstChild("Humanoid")
-    if not humanoid then return end
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    humanoid:MoveTo(position)
-    humanoid.MoveToFinished:Wait()
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local time = math.clamp(distance / 25, 0.5, 2) -- vitesse = 25 studs/sec
+
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Wait()
 end
 
 local function startMission()
@@ -769,13 +775,13 @@ local function startMission()
 
         local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuest)
         if npc and npc:FindFirstChild("HumanoidRootPart") then
-            task.wait(5)
+            task.wait(3)
 
-            -- Position devant le NPC (3 studs en arrière)
-            local targetPosition = npc.HumanoidRootPart.Position + npc.HumanoidRootPart.CFrame.LookVector * 3
+            -- Position devant le NPC
+            local targetCFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
 
-            -- Déplacement légitime
-            safeMoveTo(targetPosition)
+            -- Déplacement en douceur
+            safeTeleportTo(targetCFrame)
 
             task.wait(0.1)
             events.Qaction:InvokeServer(npc)
@@ -881,15 +887,20 @@ local datas = game:GetService("ReplicatedStorage").Datas
 
 
 
-local currentBoss = nil
+local TweenService = game:GetService("TweenService")
 
-local function moveTo(position)
+local function tweenTo(targetCFrame)
     local character = player.Character
-    local humanoid = character and character:FindFirstChild("Humanoid")
-    if not humanoid then return end
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-    humanoid:MoveTo(position)
-    humanoid.MoveToFinished:Wait()
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local time = math.clamp(distance / 100, 0.3, 1.5) -- Adapté au combat
+
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Wait()
 end
 
 local function safeBossHandler()
@@ -910,32 +921,27 @@ local function safeBossHandler()
 
         if not bossName then return end
 
-        -- Réinitialise si le boss est mort ou n’existe plus
-        if currentBoss and (not currentBoss.Parent or not currentBoss:FindFirstChild("Humanoid") or currentBoss.Humanoid.Health <= 0) then
-            currentBoss = nil
-        end
+        local bossCount = 0
 
-        -- Trouver un nouveau boss si nécessaire
-        if not currentBoss then
-            for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
-                if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
-                    currentBoss = boss
-                    break
+        for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
+            if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                bossCount += 1
+
+                -- Active le blocage (défense)
+                if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
+                    player.Status.Blocking.Value = true
                 end
+
+                -- Calcul position derrière le boss
+                local behindPosition = boss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+
+                -- Mouvement fluide
+                tweenTo(behindPosition)
             end
         end
 
-        -- Suivre le boss si on en a un
-        if currentBoss and currentBoss:FindFirstChild("HumanoidRootPart") then
-            -- Active blocage
-            if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
-                player.Status.Blocking.Value = true
-            end
+        -- BossCount > 0 : ici tu peux ajouter autre chose si nécessaire
 
-            -- Position légèrement derrière le boss
-            local behindPos = currentBoss.HumanoidRootPart.Position + currentBoss.HumanoidRootPart.CFrame.LookVector * -4
-            moveTo(behindPos)
-        end
     end)
 
     if not success then
@@ -943,14 +949,13 @@ local function safeBossHandler()
     end
 end
 
--- Boucle
+-- Boucle régulière
 task.spawn(function()
     while true do
         safeBossHandler()
         task.wait(0.4)
     end
 end)
-
 
 
 
@@ -1046,7 +1051,7 @@ task.spawn(function()
 		if isLoop8Active then
 			pcall(function()
 				local Forms = {
-                    'Ego Instinct','SSJR3','SSJB3','God of Destruction','God of Creation',
+                    'Ego Instinct','SSJR3','SSJB3','SSJ5','Divine Rose Prominence','Divine Blue','God of Destruction','God of Creation',
                     'Beast','Ultra Ego','Mastered Ultra Instinct','SSJR2','SSJB2','Ultra Instinct Omen','Evil SSJ','Blue Evolution',
 					'Dark Rose','Kefla SSJ2','SSJ Berserker','True Rose','SSJB Kaioken','SSJ Rose','SSJ Blue','Corrupt SSJ',
 					'SSJ Rage','SSJG','SSJ4','Mystic','LSSJ','SSJ3','Spirit SSJ','SSJ2 Majin','SSJ2','SSJ Kaioken','SSJ','FSSJ','Kaioken'
@@ -1135,77 +1140,83 @@ end)
 
 
 
+local attackCooldown = 0.2 -- temps minimum entre attaques (ajuste à ta convenance)
+local lastAttackTime = 0
+
 task.spawn(function()
-	while true do
-		task.wait(0.2)
+    while true do
+        task.wait(0.5) -- boucle moins agressive
 
-		if not isLoop7Active then
-			continue
-		end
+        if not isLoop7Active then continue end
 
-		local lplr = game.Players.LocalPlayer
-		local character = lplr.Character
-		if not character then continue end
+        local lplr = game.Players.LocalPlayer
+        local character = lplr and lplr.Character
+        if not character then continue end
 
-		local stats = character:FindFirstChild("Stats")
-		local humanoid = character:FindFirstChild("Humanoid")
-		if not stats or not humanoid then continue end
-		if humanoid.Health <= 0 then continue end 
+        local stats = character:FindFirstChild("Stats")
+        local humanoid = character:FindFirstChild("Humanoid")
+        if not stats or not humanoid then continue end
+        if humanoid.Health <= 0 then continue end 
 
-		local Ki = stats:FindFirstChild("Ki")
-		if not Ki then continue end
+        local Ki = stats:FindFirstChild("Ki")
+        if not Ki then continue end
 
-		for _, player in ipairs(game.Players:GetPlayers()) do
-			local ldata = game.ReplicatedStorage.Datas:FindFirstChild(player.UserId)
-			if not ldata or not ldata:FindFirstChild("Quest") then continue end
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            local ldata = game.ReplicatedStorage.Datas:FindFirstChild(player.UserId)
+            if not ldata or not ldata:FindFirstChild("Quest") then continue end
 
-			if ldata.Quest.Value ~= ""
-				and ldata:FindFirstChild("Strength") and ldata.Strength.Value > 400000
-				and ldata:FindFirstChild("Energy") and ldata.Energy.Value > 400000
-				and ldata:FindFirstChild("Defense") and ldata.Defense.Value > 400000
-				and ldata:FindFirstChild("Speed") and ldata.Speed.Value > 400000
-			then
-				local playerChar = player.Character
-				local hrp = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
-				if not hrp then continue end
+            if ldata.Quest.Value ~= ""
+                and ldata.Strength and ldata.Strength.Value > 400000
+                and ldata.Energy and ldata.Energy.Value > 400000
+                and ldata.Defense and ldata.Defense.Value > 400000
+                and ldata.Speed and ldata.Speed.Value > 400000
+            then
+                local playerChar = player.Character
+                local hrp = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
+                if not hrp then continue end
 
-				local closestBoss, closestDistance = nil, math.huge
-				for _, v in ipairs(game.Workspace.Living:GetChildren()) do
-					if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-						local dist = (hrp.Position - v.HumanoidRootPart.Position).Magnitude
-						if dist < closestDistance and v.Humanoid.Health > 0 and v.Name ~= playerChar.Name then
-							closestDistance, closestBoss = dist, v
-						end
-					end
-				end
+                local closestBoss, closestDistance = nil, math.huge
+                for _, v in ipairs(game.Workspace.Living:GetChildren()) do
+                    if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+                        local dist = (hrp.Position - v.HumanoidRootPart.Position).Magnitude
+                        if dist < closestDistance and v.Humanoid.Health > 0 and v.Name ~= playerChar.Name then
+                            closestDistance, closestBoss = dist, v
+                        end
+                    end
+                end
 
-				if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
-					local attacks = {
-						"Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
-						"Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge",
-						function()
-							game.ReplicatedStorage.Package.Events.voleys:InvokeServer("Energy Volley", {
-								FaceMouse = false,
-								MouseHit = CFrame.new()
-							}, "Blacknwhite27")
-						end
-					}
+                if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
+                    local now = tick()
+                    if now - lastAttackTime >= attackCooldown then
+                        lastAttackTime = now
 
-					for _, attack in ipairs(attacks) do
-						task.spawn(function()
-							if typeof(attack) == "string" then
-								game.ReplicatedStorage.Package.Events.letsplayagame:InvokeServer(attack, "Blacknwhite27")
-							elseif typeof(attack) == "function" then
-								attack()
-							end
-						end)
-					end
-				end
-			end
-		end
-	end
+                        local attacks = {
+                            "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
+                            "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge",
+                            function()
+                                game.ReplicatedStorage.Package.Events.voleys:InvokeServer("Energy Volley", {
+                                    FaceMouse = false,
+                                    MouseHit = CFrame.new()
+                                }, "Blacknwhite27")
+                            end
+                        }
+
+                        -- Lance les attaques **synchronisées** (pas en parallèle)
+                        for _, attack in ipairs(attacks) do
+                            if typeof(attack) == "string" then
+                                game.ReplicatedStorage.Package.Events.letsplayagame:InvokeServer(attack, "Blacknwhite27")
+                                task.wait(0.1) -- petit délai entre attaques
+                            elseif typeof(attack) == "function" then
+                                attack()
+                                task.wait(0.1)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 end)
-
 
 
 
