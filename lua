@@ -747,21 +747,15 @@ local function assignQuest()
     end
 end
 
-local TweenService = game:GetService("TweenService")
 local isTakingQuest = false
 
-local function safeTeleportTo(targetCFrame)
+local function safeMoveTo(position)
     local character = player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local humanoid = character and character:FindFirstChild("Humanoid")
+    if not humanoid then return end
 
-    local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    local time = math.clamp(distance / 25, 0.5, 2) -- vitesse = 25 studs/sec
-
-    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-    tween.Completed:Wait()
+    humanoid:MoveTo(position)
+    humanoid.MoveToFinished:Wait()
 end
 
 local function startMission()
@@ -775,13 +769,13 @@ local function startMission()
 
         local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuest)
         if npc and npc:FindFirstChild("HumanoidRootPart") then
-            task.wait(3)
+            task.wait(5)
 
-            -- Position devant le NPC
-            local targetCFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+            -- Position devant le NPC (3 studs en arrière)
+            local targetPosition = npc.HumanoidRootPart.Position + npc.HumanoidRootPart.CFrame.LookVector * 3
 
-            -- Déplacement en douceur
-            safeTeleportTo(targetCFrame)
+            -- Déplacement légitime
+            safeMoveTo(targetPosition)
 
             task.wait(0.1)
             events.Qaction:InvokeServer(npc)
@@ -887,22 +881,15 @@ local datas = game:GetService("ReplicatedStorage").Datas
 
 
 
-local TweenService = game:GetService("TweenService")
 local currentBoss = nil
 
-local function tweenTo(targetCFrame)
+local function moveTo(position)
     local character = player.Character
-    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local humanoid = character and character:FindFirstChild("Humanoid")
+    if not humanoid then return end
 
-    local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    if distance < 1 then return end -- déjà proche, ne rien faire
-
-    local time = math.clamp(distance / 25, 0.3, 1.5)
-    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
-    tween:Play()
-    tween.Completed:Wait()
+    humanoid:MoveTo(position)
+    humanoid.MoveToFinished:Wait()
 end
 
 local function safeBossHandler()
@@ -923,10 +910,13 @@ local function safeBossHandler()
 
         if not bossName then return end
 
-        -- Si le boss actuel n’est plus valide (mort ou supprimé)
-        if not currentBoss or not currentBoss.Parent or not currentBoss:FindFirstChild("Humanoid") or currentBoss.Humanoid.Health <= 0 then
-            currentBoss = nil -- reset
-            -- Recherche d’un nouveau boss valide
+        -- Réinitialise si le boss est mort ou n’existe plus
+        if currentBoss and (not currentBoss.Parent or not currentBoss:FindFirstChild("Humanoid") or currentBoss.Humanoid.Health <= 0) then
+            currentBoss = nil
+        end
+
+        -- Trouver un nouveau boss si nécessaire
+        if not currentBoss then
             for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
                 if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
                     currentBoss = boss
@@ -935,16 +925,16 @@ local function safeBossHandler()
             end
         end
 
-        -- Si on a un boss actif valide
+        -- Suivre le boss si on en a un
         if currentBoss and currentBoss:FindFirstChild("HumanoidRootPart") then
-            -- Active le blocage (défense)
+            -- Active blocage
             if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
                 player.Status.Blocking.Value = true
             end
 
-            -- Position derrière le boss
-            local behindCFrame = currentBoss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
-            tweenTo(behindCFrame)
+            -- Position légèrement derrière le boss
+            local behindPos = currentBoss.HumanoidRootPart.Position + currentBoss.HumanoidRootPart.CFrame.LookVector * -4
+            moveTo(behindPos)
         end
     end)
 
@@ -953,13 +943,14 @@ local function safeBossHandler()
     end
 end
 
--- Boucle régulière
+-- Boucle
 task.spawn(function()
     while true do
         safeBossHandler()
         task.wait(0.4)
     end
 end)
+
 
 
 
