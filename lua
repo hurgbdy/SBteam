@@ -747,42 +747,53 @@ local function assignQuest()
     end
 end
 
+local TweenService = game:GetService("TweenService")
 local isTakingQuest = false
 
-local function startMission()
-    if not isLoop1Active or isTakingQuest then
-        return
-    end
+local function safeTeleportTo(targetCFrame)
+    local character = player.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local time = math.clamp(distance / 25, 0.5, 2) -- vitesse = 25 studs/sec
+
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Wait()
+end
+
+local function startMission()
+    if not isLoop1Active or isTakingQuest then return end
     isTakingQuest = true
 
     pcall(function()
         local questValue = game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value
 
-        -- Vérifie si la quête sélectionnée est déjà active
-        if questValue == SelectedQuest then
-            return
-        end
+        if questValue == SelectedQuest then return end
 
-        -- Recherche du NPC correspondant à la quête
         local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuest)
         if npc and npc:FindFirstChild("HumanoidRootPart") then
             task.wait(3)
-            -- Téléporte le joueur devant le NPC
-            player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+
+            -- Position devant le NPC
+            local targetCFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+
+            -- Déplacement en douceur
+            safeTeleportTo(targetCFrame)
+
             task.wait(0.1)
-            
-            -- Tente d'accepter la quête
             events.Qaction:InvokeServer(npc)
         else
             warn("NPC non trouvé pour la quête :", SelectedQuest)
         end
     end)
 
-    -- Réinitialise le flag après un délai pour éviter les doubles prises
     task.wait(0.1)
     isTakingQuest = false
 end
+
 
 
 task.spawn(function()
@@ -876,13 +887,24 @@ local datas = game:GetService("ReplicatedStorage").Datas
 
 
 
+local TweenService = game:GetService("TweenService")
 
+local function tweenTo(targetCFrame)
+    local character = player.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
+    local distance = (hrp.Position - targetCFrame.Position).Magnitude
+    local time = math.clamp(distance / 25, 0.3, 1.5) -- Adapté au combat
 
+    local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
+    tween:Play()
+    tween.Completed:Wait()
+end
 
 local function safeBossHandler()
     local success, err = pcall(function()
-        -- Vérification des prérequis
         if not missions or #missions == 0 then return end
         if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
         if not data or not data:FindFirstChild("Quest") then return end
@@ -890,7 +912,6 @@ local function safeBossHandler()
         local mission = data.Quest.Value
         local bossName
 
-        -- Détermination du boss à partir de la mission
         for _, quest in ipairs(missions) do
             if quest.name == mission then
                 bossName = quest.bossName
@@ -902,28 +923,25 @@ local function safeBossHandler()
 
         local bossCount = 0
 
-        -- Recherche des boss vivants correspondants
         for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
             if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
                 bossCount += 1
 
-                -- Active le blocage
+                -- Active le blocage (défense)
                 if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
                     player.Status.Blocking.Value = true
                 end
 
-                -- Positionnement derrière le boss
+                -- Calcul position derrière le boss
                 local behindPosition = boss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
-                player.Character.HumanoidRootPart.CFrame = behindPosition
+
+                -- Mouvement fluide
+                tweenTo(behindPosition)
             end
         end
 
-        -- Traitements si besoin selon bossCount
-        if bossCount == 0 then
-            -- Aucun boss en vie, possibilité d'attendre ou passer à autre chose
-        else
-            -- Boss trouvé, actions possibles ici
-        end
+        -- BossCount > 0 : ici tu peux ajouter autre chose si nécessaire
+
     end)
 
     if not success then
@@ -931,13 +949,14 @@ local function safeBossHandler()
     end
 end
 
--- Boucle sécurisée sans récursion directe
+-- Boucle régulière
 task.spawn(function()
     while true do
         safeBossHandler()
         task.wait(0.4)
     end
 end)
+
 
 
 
@@ -999,6 +1018,31 @@ task.spawn(function()
 	end
 end)
 
+
+local player = game:GetService("Players").LocalPlayer
+local targetted = player.Name
+local events = game:GetService("ReplicatedStorage").Package.Events
+local datas = game:GetService("ReplicatedStorage").Datas
+
+task.spawn(function()
+    while true do
+        pcall(function()
+            local targetPlayer = game.Workspace.Living:FindFirstChild(targetted)
+            local questData = datas:FindFirstChild(player.UserId)
+
+            if targetPlayer and questData and questData:FindFirstChild("Quest") then
+                -- Tant que le joueur est vivant
+                while game.Workspace.Living:FindFirstChild(targetted) do
+                    pcall(function()
+                        events.cha:InvokeServer("Blacknwhite27")
+                    end)
+                    task.wait(0.2)
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end)
 
 
 task.spawn(function()
