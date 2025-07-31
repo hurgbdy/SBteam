@@ -1,340 +1,402 @@
-wait(0.5)
-local MenuPanel = game.CoreGui:FindFirstChild("SB team")
-local playerCount = game.Players:GetPlayers()
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
 
-pcall(function()
-    if MenuPanel then
-        return  
-    end
+local RebhookUrl = "https://discord.com/api/webhooks/..."
 
-    if playerCount > 3 then
-        pcall(function()
-            if MenuPanel then
-                MenuPanel:Destroy()
-            end
-        end)
-        wait(0.5)
-        pcall(function()
-            game:Shutdown()
-        end)
-        return  
+local function formatNumber(number)
+    local suffixes = {"", "K", "M", "B", "T", "QD", "QN", "Sx", "Sp"}
+    local suffixIndex = 1
+    while math.abs(number) >= 1000 and suffixIndex < #suffixes do
+        number = number / 1000
+        suffixIndex = suffixIndex + 1
     end
+    return string.format("%.2f%s", number, suffixes[suffixIndex])
+end
 
-    if playerCount > 1 then
-        pcall(function()
-            game.ReplicatedStorage.Package.Events.TP:InvokeServer("Earth")
-        end)
+local function sendWebhook(content)
+    local data = {
+        ["username"] = "SB Team",
+        ["avatar_url"] = "https://cdn.discordapp.com/attachments/...",
+        ["content"] = content
+    }
+
+    local jsonData = HttpService:JSONEncode(data)
+    local headers = { ["Content-Type"] = "application/json" }
+
+    local success, response = pcall(function()
+        if syn and syn.request then
+            return syn.request({ Url = RebhookUrl, Body = jsonData, Method = "POST", Headers = headers })
+        elseif request then
+            return request({ Url = RebhookUrl, Body = jsonData, Method = "POST", Headers = headers })
+        elseif http_request then
+            return http_request({ Url = RebhookUrl, Body = jsonData, Method = "POST", Headers = headers })
+        end
+    end)
+
+    if not success then
+        warn("Erreur d’envoi Webhook :", response)
     end
+end
+
+local function logStats()
+    local player = Players.LocalPlayer
+    local data = ReplicatedStorage:FindFirstChild("Datas") and ReplicatedStorage.Datas:FindFirstChild(player.UserId)
+    if not data then return end
+
+    local rebirths = data:FindFirstChild("Rebirth") and data.Rebirth.Value or 0
+    local energy = data:FindFirstChild("Energy") and data.Energy.Value or 0
+
+    local currentTime = os.date("%I:%M:%S %p")
+    local formattedEnergy = formatNumber(energy)
+
+    local message = string.format("%s | %s (@%s) Rebirths: %d | Stats: %s", currentTime, player.DisplayName, player.Name, rebirths, formattedEnergy)
+    sendWebhook(message)
+end
+
+logStats()
+
+task.wait(0.5)
+game.Workspace.Gravity = 1
+
+local player = Players.LocalPlayer
+
+-- Attendre PlayerGui
+while not player:FindFirstChild("PlayerGui") do task.wait() end
+
+-- Création GUI
+local ba = Instance.new("ScreenGui")
+ba.Name = "AntiAfkGui"
+ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ba.Parent = player:WaitForChild("PlayerGui")
+
+local ca = Instance.new("TextLabel")
+ca.Parent = ba
+ca.Active = true
+ca.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ca.Transparency = 1
+ca.Draggable = true
+ca.Position = UDim2.new(0.698, 0, 0.098, 0)
+ca.Size = UDim2.new(0, 370, 0, 52)
+ca.Font = Enum.Font.SourceSansSemibold
+ca.Text = "Anti Afk"
+ca.TextColor3 = Color3.new(0, 1, 1)
+ca.TextSize = 22
+
+local da = Instance.new("Frame")
+da.Parent = ca
+da.Transparency = 1
+da.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+da.Position = UDim2.new(0, 0, 1.02, 0)
+da.Size = UDim2.new(0, 370, 0, 107)
+
+local _b = Instance.new("TextLabel")
+_b.Parent = da
+_b.Transparency = 1
+_b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+_b.Position = UDim2.new(0, 0, 0.80, 0)
+_b.Size = UDim2.new(0, 370, 0, 21)
+_b.Font = Enum.Font.Arial
+_b.Text = "Made by SbTeam"
+_b.TextColor3 = Color3.new(0, 1, 1)
+_b.TextSize = 20
+
+local ab = Instance.new("TextLabel")
+ab.Parent = da
+ab.Transparency = 1
+ab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ab.Position = UDim2.new(0, 0, 0.158, 0)
+ab.Size = UDim2.new(0, 370, 0, 44)
+ab.Font = Enum.Font.ArialBold
+ab.Text = "Status: Active"
+ab.TextColor3 = Color3.new(0, 1, 1)
+ab.TextSize = 20
+
+-- Anti-AFK
+local vu = game:GetService("VirtualUser")
+player.Idled:Connect(function()
+    vu:CaptureController()
+    vu:ClickButton2(Vector2.new())
+    ab.Text = "Roblox tried kicking you but I didn't let them!"
+    task.wait(2)
+    ab.Text = "Status: Active"
 end)
 
 
-local success, fail = pcall(function()
-    local player = game.Players.LocalPlayer
-    local Players = game:GetService("Players")
-    local TweenService = game:GetService("TweenService")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local HttpService = game:GetService("HttpService")
-    local TeleportService = game:GetService("TeleportService")
-    local ScreenGui = Instance.new("ScreenGui")
-    local TextLabel = Instance.new("TextLabel")
-    local farmLabel = Instance.new("TextLabel")
-    local formsLabel = Instance.new("TextLabel")
-    local meleeLabel = Instance.new("TextLabel")
-    local tpLabel = Instance.new("TextLabel")
-    local Reb = Instance.new("TextLabel")
-    local destroyLabel = Instance.new("TextLabel")
-    local farmButton = Instance.new("TextButton")
-    local formsButton = Instance.new("TextButton")
-    local playersButton = Instance.new("TextButton")
-    local MinimizeButton = Instance.new("TextButton")
-    local MainButton = Instance.new("TextButton")
-    local billsButton = Instance.new("TextButton")
-    local earthButton = Instance.new("TextButton")
-    local leftLine = Instance.new("Frame")
-    local rightLine = Instance.new("Frame")
-    local topLine = Instance.new("Frame")
-    local bottomLine = Instance.new("Frame")
-    local centerLine = Instance.new("Frame")
-    local upperLine = Instance.new("Frame")
-    local middleLine = Instance.new("Frame")
-    local frontSwitchLine = Instance.new("Frame")
-    local MenuPanel = Instance.new("Frame")
-    local ButtonCorner = Instance.new("UICorner")
-    local Panel = Instance.new("ImageLabel")
-    local panelExpanded = false
-    local sound = Instance.new("Sound", game.Workspace)
-    local imageLabel = Instance.new("ImageLabel")
-    local billsImageLabel = Instance.new("ImageLabel")
-    local earthImageLabel = Instance.new("ImageLabel")
-    local hbtcButton = Instance.new("TextButton")
-    local hbtcImageLabel = Instance.new("ImageLabel")
-    local hbtgvButton = Instance.new("TextButton")
-    local hbtgvImageLabel = Instance.new("ImageLabel")
-    local mle_extLabel = Instance.new("TextLabel")
-    local Stats = game:GetService("Stats")
-    local RunService = game:GetService("RunService")
-    local pingTextLabel = Instance.new("TextLabel")
-    local fpsTextLabel = Instance.new("TextLabel")
-    local missionTextLabel = Instance.new("TextLabel")
-    local timeTextLabel = Instance.new("TextLabel")
-    local button = Instance.new("TextButton", screenGui)
-    local bestId
-    local background = Instance.new("Frame")
-    local playerListContainer = Instance.new("ScrollingFrame")
-    local containerCorner = Instance.new("UICorner") 
-    local corner = Instance.new("UICorner")
-    local ballFrame = Instance.new("Frame")
 
 
+
+local MenuPanel = player.PlayerGui:FindFirstChild("SB team")
+local playerCount = game.Players:GetPlayers()
+-- Initialisation des services
+local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Stats = game:GetService("Stats")
+local RunService = game:GetService("RunService")
+
+-- Création des éléments UI
+local ScreenGui = Instance.new("ScreenGui")
+local TextLabel = Instance.new("TextLabel")
+local farmLabel = Instance.new("TextLabel")
+local formsLabel = Instance.new("TextLabel")
+local meleeLabel = Instance.new("TextLabel")
+local tpLabel = Instance.new("TextLabel")
+local Reb = Instance.new("TextLabel")
+local destroyLabel = Instance.new("TextLabel")
+local farmButton = Instance.new("TextButton")
+local formsButton = Instance.new("TextButton")
+local playersButton = Instance.new("TextButton")
+local MinimizeButton = Instance.new("TextButton")
+local MainButton = Instance.new("TextButton")
+local billsButton = Instance.new("TextButton")
+local earthButton = Instance.new("TextButton")
+local leftLine = Instance.new("Frame")
+local rightLine = Instance.new("Frame")
+local topLine = Instance.new("Frame")
+local bottomLine = Instance.new("Frame")
+local centerLine = Instance.new("Frame")
+local upperLine = Instance.new("Frame")
+local middleLine = Instance.new("Frame")
+local frontSwitchLine = Instance.new("Frame")
+local MenuPanel = Instance.new("Frame")
+local ButtonCorner = Instance.new("UICorner")
+local Panel = Instance.new("ImageLabel")
+local panelExpanded = false
+local sound = Instance.new("Sound", game.Workspace)
+local imageLabel = Instance.new("ImageLabel")
+local billsImageLabel = Instance.new("ImageLabel")
+local earthImageLabel = Instance.new("ImageLabel")
+local hbtcButton = Instance.new("TextButton")
+local hbtcImageLabel = Instance.new("ImageLabel")
+local hbtgvButton = Instance.new("TextButton")
+local hbtgvImageLabel = Instance.new("ImageLabel")
+local mle_extLabel = Instance.new("TextLabel")
+local Transformation = Instance.new("TextLabel")
+local REBHOOK = Instance.new("TextLabel")
+local pingTextLabel = Instance.new("TextLabel")
+local fpsTextLabel = Instance.new("TextLabel")
+local missionTextLabel = Instance.new("TextLabel")
+local timeTextLabel = Instance.new("TextLabel")
+local button = Instance.new("TextButton", ScreenGui)
+local bestId
+local background = Instance.new("Frame")
+local playerListContainer = Instance.new("ScrollingFrame")
+local containerCorner = Instance.new("UICorner") 
+local corner = Instance.new("UICorner")
+local ballFrame = Instance.new("Frame")
 local userId = player.UserId
 local thumbnailType = Enum.ThumbnailType.HeadShot
 local thumbnailSize = Enum.ThumbnailSize.Size48x48
 local thumbnailUrl = Players:GetUserThumbnailAsync(userId, thumbnailType, thumbnailSize)
-
 local UICorner = Instance.new("UICorner")
-
 local player = game.Players.LocalPlayer
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-gui.Name = "CustomGui"
-gui.ResetOnSpawn = false
 
--- Main frame
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 180, 0, 300)
-main.Position = UDim2.new(0, 50, 0.5, -150)
-main.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-main.BorderSizePixel = 0
-main.ClipsDescendants = true
-main.AnchorPoint = Vector2.new(0, 0)
-main.BackgroundTransparency = 0.1
-main.Name = "MainFrame"
+-- Initialisation
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SB team"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+-- Fonctions utilitaires
+local function roundify(gui, radius)
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, radius)
+    corner.Parent = gui
+end
 
--- Rainbow outline
-local stroke = Instance.new("UIStroke", main)
-stroke.Thickness = 2
-stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-stroke.Color = Color3.fromRGB(255, 0, 0)
+-- Titre principal avec fond bleu
+local TextLabel = Instance.new("TextLabel")
+TextLabel.Parent = ScreenGui
+TextLabel.BackgroundColor3 = Color3.fromRGB(30, 40, 80) -- Fond bleu clair
+TextLabel.BackgroundTransparency = 0.05
+TextLabel.Position = UDim2.new(0.5, -225, 0.2, 0)
+TextLabel.Size = UDim2.new(0, 450, 0, 40)
+TextLabel.Font = Enum.Font.GothamBlack
+TextLabel.Text = "⚡ SB team V4 "
+TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TextLabel.TextStrokeTransparency = 0.7 -- Ombre légère
+TextLabel.TextScaled = true
+TextLabel.Active = true
+TextLabel.Draggable = true
+roundify(TextLabel, 4)
 
--- Arc-en-ciel anim
+-- Dégradé bleu ciel avec des teintes plus lumineuses
+local rgbTween = Instance.new("UIGradient")
+rgbTween.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(135, 206, 250)), -- Bleu ciel clair
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(176, 224, 230)), -- Light Steel Blue
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(70, 130, 180)) -- Steel Blue (plus léger)
+}
+rgbTween.Rotation = 0
+rgbTween.Parent = TextLabel
+
+-- Animation fluide du dégradé
 task.spawn(function()
-    local hue = 0
+    local step = 0
     while true do
-        hue = (hue + 0.01) % 1
-        stroke.Color = Color3.fromHSV(hue, 1, 1)
-        task.wait(0.05)
+        -- Progression du dégradé avec une légère oscillation
+        step = step + 1
+        if step > 360 then
+            step = 0
+        end
+        rgbTween.Rotation = step
+        task.wait(0.02) -- Animation fluide mais subtile
     end
 end)
 
--- Drag and drop setup
-local UIS = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
 
--- En-tête avec SB Team et V3
-local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1, 0, 0, 40)
-header.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-header.BorderSizePixel = 0
+-- Contour lumineux pour le style
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.4
+stroke.Color = Color3.fromRGB(135, 206, 250) -- bleu ciel lumineux
+stroke.Transparency = 0.2
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = TextLabel
 
-Instance.new("UICorner", header).CornerRadius = UDim.new(0, 12)
 
--- SB Team label
-local sbTeamLabel = Instance.new("TextLabel", header)
-sbTeamLabel.Parent = header
-sbTeamLabel.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-sbTeamLabel.BorderSizePixel = 0
-sbTeamLabel.Position = UDim2.new(0, 10, 0, 0)
-sbTeamLabel.Size = UDim2.new(0.5, 0, 1, 0)
-sbTeamLabel.Font = Enum.Font.GothamBold
-sbTeamLabel.Text = "SB Team"
-sbTeamLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-sbTeamLabel.TextSize = 18
-sbTeamLabel.TextScaled = true
-sbTeamLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-sbTeamLabel.TextStrokeTransparency = 0.5
-sbTeamLabel.Active = true
-sbTeamLabel.Draggable = true
+local MenuPanel = Instance.new("Frame")
+MenuPanel.Parent = TextLabel
+MenuPanel.BackgroundColor3 = Color3.fromRGB(135, 206, 250) -- Fond bleu ciel clair
+MenuPanel.BackgroundTransparency = 0.1 -- Légèrement transparent pour un effet plus doux
+MenuPanel.Position = UDim2.new(0, 0, 1, 5)
+MenuPanel.Size = UDim2.new(0, 450, 0, 350)
+MenuPanel.Visible = true
+roundify(MenuPanel, 12)
 
--- V3 label
-local v3Label = Instance.new("TextLabel", header)
-v3Label.Parent = header
-v3Label.BackgroundColor3 = Color3.fromRGB(15, 20, 40)
-v3Label.BorderSizePixel = 0
-v3Label.Position = UDim2.new(0.5, 0, 0, 0)
-v3Label.Size = UDim2.new(0.5, 0, 1, 0)
-v3Label.Font = Enum.Font.GothamBold
-v3Label.Text = "V3"
-v3Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-v3Label.TextSize = 18
-v3Label.TextScaled = true
-v3Label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-v3Label.TextStrokeTransparency = 0.5
-v3Label.Active = true
-v3Label.Draggable = true
+-- Dégradé lumineux avec des tons de bleu clair et bleu normal
+local panelGradient = Instance.new("UIGradient")
+panelGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(135, 206, 250)), -- Light Sky Blue
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(70, 130, 180)), -- Steel Blue
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 149, 237)) -- Cornflower Blue
+}
+panelGradient.Rotation = 0 -- Pas de rotation
+panelGradient.Parent = MenuPanel
 
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+-- Animation pour un effet lumineux progressif
+task.spawn(function()
+    while true do
+        for i = 0, 1, 0.01 do
+            -- Modifie la transparence du dégradé pour un effet lumineux dynamique
+            panelGradient.Transparency = UDim2.new(0, i)
+            task.wait(0.05) -- Durée pour que l'animation soit fluide
+        end
+        for i = 1, 0, -0.01 do
+            -- Modifie la transparence dans l'autre sens pour un effet d'oscillation
+            panelGradient.Transparency = UDim2.new(0, i)
+            task.wait(0.05)
+        end
     end
 end)
 
-header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
 
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
+-- Ajout d'un léger contour lumineux
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 1.4
+stroke.Color = Color3.fromRGB(135, 206, 250) -- même ton que le dégradé clair
+stroke.Transparency = 0.25
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+stroke.Parent = MenuPanel
 
--- Scrolling frame
-local scrollingFrame = Instance.new("ScrollingFrame", main)
-scrollingFrame.Size = UDim2.new(1, -20, 1, -40)  -- 40px réservé pour l'en-tête
-scrollingFrame.Position = UDim2.new(0, 10, 0, 40)
-scrollingFrame.BackgroundTransparency = 1
-scrollingFrame.ScrollBarThickness = 8
 
--- Ajouter une barre d'indicateur de défilement sur le côté
-local scrollbarIndicator = Instance.new("Frame", main)
-scrollbarIndicator.Size = UDim2.new(0, 8, 1, -40)  -- Barre sur le côté droit, en prenant la hauteur de l'écran
-scrollbarIndicator.Position = UDim2.new(1, -18, 0, 40)
-scrollbarIndicator.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-scrollbarIndicator.BorderSizePixel = 0
+-- Fonction pour créer des labels après MenuPanel
+local function createLabel(text, position)
+	local label = Instance.new("TextLabel")
+	label.Name = text
+	label.Text = text
+	label.Position = position
+	label.Size = UDim2.new(0.4, 0, 0, 28) -- bonne taille visible
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(255, 255, 255)
+	label.TextScaled = false
+	label.TextSize = 16
+	label.Font = Enum.Font.GothamSemibold
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = MenuPanel
+	return label
+end
 
-local UIListLayout = Instance.new("UIListLayout", scrollingFrame)
-UIListLayout.Padding = UDim.new(0, 10)
+-- Minimize
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Parent = TextLabel
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 75, 75)
+MinimizeButton.Position = UDim2.new(1, -38, 0.5, -13)
+MinimizeButton.Size = UDim2.new(0, 28, 0, 26)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB()
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.TextScaled = false
+roundify(MinimizeButton, 6)
 
--- Options
-local options = {
-    "Auto\nFarm",
-    "Auto\nForm",
-    "Form|Vip",
-    "Tp|Planet",
-    "Reb|Stats",
-    "Reset\nServer",
-    "Oozaru/GB"
+-- Ligne décorative
+local bottomLine = Instance.new("Frame")
+bottomLine.Parent = MenuPanel
+bottomLine.Size = UDim2.new(1, 0, 0, 4)
+bottomLine.Position = UDim2.new(0, 0, 1, -4)
+bottomLine.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
+bottomLine.BackgroundTransparency = 0.2
+roundify(bottomLine, 2)
+
+-- Tous les labels
+local labels = {
+	{ name = "AUTO-FARM", position = UDim2.new(0.05, 0, 0.05, 20) },
+	{ name = "SKIP LOADING", position = UDim2.new(0.05, 0, 0.25, 20) },
+	{ name = "REBIRTH", position = UDim2.new(0.05, 0, 0.45, 20) },
+	{ name = "SKILLS", position = UDim2.new(0.05, 0, 0.65, 20) },
+	{ name = "FreeForm", position = UDim2.new(0.55, 0, 0.04, 20) },
+	{ name = "GamePass/From", position = UDim2.new(0.55, 0, 0.25, 20) },
+	{ name = "TP PLANET", position = UDim2.new(0.55, 0, 0.45, 20) },
 }
 
-local toggles = {}
 
--- Fonction pour changer la couleur des boutons
-local function toggleSwitch(status, isActive)
-    status.BackgroundColor3 = isActive and Color3.fromRGB(0, 255, 150) or Color3.fromRGB(255, 50, 50)  -- Vert quand activé, Rouge quand désactivé
+for _, data in ipairs(labels) do
+	createLabel(data.name, data.position)
 end
 
-for i, name in ipairs(options) do
-    local buttonFrame = Instance.new("TextButton", scrollingFrame)
-    buttonFrame.Size = UDim2.new(1, -20, 0, 40)
-    buttonFrame.Position = UDim2.new(0, 10, 0, (i - 1) * 42 + 10)
-    buttonFrame.BackgroundTransparency = 1
-    buttonFrame.Text = ""
-    buttonFrame.AutoButtonColor = false
+-- Mission text
+local missionTextLabel = Instance.new("TextLabel")
+missionTextLabel.Name = "MissionTextLabel"
+missionTextLabel.Parent = TextLabel
+missionTextLabel.Position = UDim2.new(0.5, 0, 1, 5)
+missionTextLabel.Size = UDim2.new(0, 90, 0, 10)
+missionTextLabel.AnchorPoint = Vector2.new(0.5, 0)
+missionTextLabel.BackgroundTransparency = 1
+missionTextLabel.Font = Enum.Font.GothamSemibold
+missionTextLabel.TextSize = 1
+missionTextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+missionTextLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+missionTextLabel.TextStrokeTransparency = 0.1
+missionTextLabel.Text = ""
 
-    local label = Instance.new("TextLabel", buttonFrame)
-    label.Size = UDim2.new(0.8, 0, 1, 0)
-    label.Position = UDim2.new(0, 0, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = name
-    label.Font = Enum.Font.GothamBlack
-    label.TextSize = 18
-    label.TextColor3 = Color3.fromRGB(255, 80, 100)
-    label.TextStrokeTransparency = 0
-    label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextWrapped = true
+local ballFrame = Instance.new("Frame")
+ballFrame.Size = UDim2.new(0, 37, 0, 17)
+ballFrame.Position = UDim2.new(1, -22, 0, 42)
+ballFrame.BackgroundTransparency = 1  -- Rendre le fond complètement transparent
+ballFrame.Parent = TextLabel
+roundify(ballFrame, 7)
 
-    local status = Instance.new("Frame", buttonFrame)
-    status.Size = UDim2.new(0, 20, 0, 20)
-    status.Position = UDim2.new(1, -25, 0.5, -10)
-    status.BackgroundColor3 = Color3.fromRGB(255, 50, 50)  -- Rouge pour désactivé
-    Instance.new("UICorner", status).CornerRadius = UDim.new(1, 0)
-
-    -- Effet de survol
-    local glow = Instance.new("UIStroke", label)
-    glow.Thickness = 0
-    glow.Color = Color3.fromRGB(255, 255, 255)
-
-    buttonFrame.MouseEnter:Connect(function()
-        glow.Thickness = 1
-    end)
-
-    buttonFrame.MouseLeave:Connect(function()
-        glow.Thickness = 0
-    end)
-
-    -- Initialisation du bouton comme désactivé (donc rouge)
-    toggles[name] = false
-
-    buttonFrame.MouseButton1Click:Connect(function()
-        toggles[name] = not toggles[name]
-        toggleSwitch(status, toggles[name])
-
-        if toggles[name] then
-            startLoop(name)  -- Lance la boucle
-        else
-            stopLoop(name)  -- Arrête la boucle
-        end
-        print(name .. " toggle ->", toggles[name])
-    end)
-end
-
--- Met à jour l'indicateur de défilement en fonction du défilement
-scrollingFrame:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
-    local scrollPosition = scrollingFrame.CanvasPosition.Y
-    local canvasHeight = scrollingFrame.CanvasSize.Y.Offset
-    local frameHeight = scrollingFrame.AbsoluteSize.Y
-    local scrollIndicatorHeight = frameHeight / canvasHeight
-    scrollbarIndicator.Size = UDim2.new(0, 8, 0, scrollIndicatorHeight * frameHeight)
-    scrollbarIndicator.Position = UDim2.new(1, -18, 0, 40 + (scrollPosition / (canvasHeight - frameHeight)) * (frameHeight - scrollbarIndicator.Size.Y.Offset))
-end)
-
--- Mise à jour dynamique de la CanvasSize pour permettre le défilement
-game:GetService("RunService").Heartbeat:Connect(function()
-    local totalHeight = #options * 42 + 10  -- Calcul de la hauteur totale des éléments
-    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
-end)
+-- Modifier la taille du texte de TextLabel
+TextLabel.TextSize = 18  -- Par exemple, mets ici la taille que tu veux
 
 
 
-
-ballFrame.Size = UDim2.new(0.01592638372826266, 0, 0.22392638372826266, 0) -- Tamaño de la bola
-ballFrame.Position = UDim2.new(0.9796319186413133, 0, 0.7796319186413133, 0) -- Centro de la pantalla
-ballFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 0) -- Amarillo brillante
-ballFrame.BackgroundTransparency = 1 -- Totalmente opaco
-ballFrame.Parent = TextLabel 
-
-corner.CornerRadius = UDim.new(0.9, 0)
-corner.Parent = ballFrame
-
-
-
-
-
-local TweenService = game:GetService("TweenService")
-local colorChangeTweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+-- Blur léger
 local blurEffect = Instance.new("BlurEffect")
-blurEffect.Size = 5
+blurEffect.Size = 3
 blurEffect.Parent = game.Lighting
+
+
 
 
 pcall(function()
     ButtonCorner.Parent = MinimizeButton
     sound.SoundId = "rbxassetid://1293432192"
 end)
-
 local menuExpanded = false
 local expandTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 local contractTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
@@ -354,7 +416,7 @@ local function SaveMenuState(isExpanded)
     end)
 
     if not success then
-        warn("Error al guardar el estado del menú: " .. tostring(err))
+       
     end
 end
 
@@ -368,7 +430,7 @@ local function SaveMenuState(isExpanded)
     end)
 
     if not success then
-        warn("Error al guardar el estado del menú: " .. tostring(err))
+        
     end
 end
 
@@ -385,7 +447,7 @@ local function LoadMenuState()
     end)
 
     if not success then
-        warn("Error al cargar el estado del menú: " .. tostring(result))
+       
         return false
     end
 
@@ -395,39 +457,53 @@ end
 menuExpanded = LoadMenuState()
 MenuPanel.Visible = menuExpanded
 
-pcall(function()
-    if menuExpanded then
-        MenuPanel.Size = expandSize
-        MinimizeButton.Text = "-"
-    else
-        MenuPanel.Size = contractSize
-        MinimizeButton.Text = "+"
-    end
-end)
+local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
 
+-- Valeurs d’état
+local menuExpanded = false
+
+-- Définir tailles
+local expandSize = UDim2.new(0, 450, 0, 350)
+local contractSize = UDim2.new(0, 450, 0, 0)
+
+-- Tween config
+local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local expandTween = TweenService:Create(MenuPanel, tweenInfo, { Size = expandSize })
+local contractTween = TweenService:Create(MenuPanel, tweenInfo, { Size = contractSize })
+
+-- Son
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://9118823104" -- 🔊 Clique stylé, tu peux changer
+sound.Volume = 0.2
+sound.Parent = SoundService
+
+-- Animation avec sécurité
 MinimizeButton.MouseButton1Click:Connect(function()
-    local success, err = pcall(function()
-        if menuExpanded then
-            contractTween:Play()
-            MinimizeButton.Text = "+"
-            sound:Play()
-            wait()
-            MenuPanel.Visible = false
-        else
-            MenuPanel.Visible = true
-            expandTween:Play()
-            MinimizeButton.Text = "-"
-            sound:Play()
-        end
-        menuExpanded = not menuExpanded
-        SaveMenuState(menuExpanded)
-    end)
+	local success, err = pcall(function()
+		if menuExpanded then
+			contractTween:Play()
+			MinimizeButton.Text = "+"
+			sound:Play()
+			task.delay(0, function()
+				if not menuExpanded then
+					MenuPanel.Visible = false
+				end
+			end)
+		else
+			MenuPanel.Visible = true
+			expandTween:Play()
+			MinimizeButton.Text = "-"
+			sound:Play()
+		end
+		menuExpanded = not menuExpanded
+		SaveMenuState(menuExpanded) -- si t’as une fonction de save d'état
+	end)
 
-    if not success then
-        warn("Error al minimizar/expandir el menú: " .. tostring(err))
-    end
+	if not success then
+		
+	end
 end)
-
 
 
 local function initSwitches(MenuPanel)
@@ -467,6 +543,9 @@ local switchButton1, switchBall1 = safeCreateSwitch(UDim2.new(0.3, 0, 0.1, 0), "
 local switchButton3, switchBall3 = safeCreateSwitch(UDim2.new(0.3, 0, 0.3, 0), "Switch3")
 local switchButton5, switchBall5 = safeCreateSwitch(UDim2.new(0.3, 0, 0.5, 0), "Switch5")
 local switchButton7, switchBall7 = safeCreateSwitch(UDim2.new(0.3, 0, 0.7, 0), "Switch7")
+local switchButton8, switchBall8 = safeCreateSwitch(UDim2.new(0.77 , 0, 0.1, 0), "Switch8")
+local switchButton9, switchBall9 = safeCreateSwitch(UDim2.new(0.77 , 0, 0.5, 0), "Switch9")
+local switchButton10, switchBall10 = safeCreateSwitch(UDim2.new(0.77 , 0, 0.3, 0), "Switch10")
 
 
     local function SaveSwitchState(isActive, switchName)
@@ -507,7 +586,7 @@ local function toggleSwitch(isActive, switchBall)
             switchBall.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
         else
             switchBall.Position = UDim2.new(0, 5, 0.5, -15)
-            switchBall.BackgroundColor3 = Color3.fromRGB(128, 0, 255)
+            switchBall.BackgroundColor3 = Color3.fromRGB(255, 21, 0)
         end
     end)
 end
@@ -523,27 +602,108 @@ local isLoop3Active = safeLoadSwitchState("Switch3")
 local isLoop5Active = safeLoadSwitchState("Switch5")
 local isLoop6Active = safeLoadSwitchState("Switch6")
 local isLoop7Active = safeLoadSwitchState("Switch7")
+local isLoop8Active = safeLoadSwitchState("Switch8")
+local isLoop9Active = safeLoadSwitchState("Switch9")
+local isloop10Active = safeLoadSwitchState("Switch10")
 
-    local function loop1()
-        pcall(function()                     
-        local player = game.Players.LocalPlayer
+
+local player = game.Players.LocalPlayer
+
+-- Attendre que tout soit prêt avant d'exécuter la suite
+repeat task.wait() until player and player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+repeat task.wait() until game.ReplicatedStorage:FindFirstChild("Datas") and game.ReplicatedStorage.Datas:FindFirstChild(player.UserId)
+repeat task.wait() until game.ReplicatedStorage:FindFirstChild("Package") and game.ReplicatedStorage.Package:FindFirstChild("Events")
+
+local player = game.Players.LocalPlayer
 local data = game.ReplicatedStorage.Datas[player.UserId]
 local events = game:GetService("ReplicatedStorage").Package.Events
+local missions = {}
 
-local missions = {
-    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 20000 },
-    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 20001, endRange = 100000 },
-    { name = "Radish", bossName = "Radish", requiredValue = 100001, endRange = 3500000 },
-    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 3500001, endRange = 10000000 },
-    { name = "SSJB Wukong", bossName = "SSJB Wukong", requiredValue = 10000001, endRange = 56300000 },
-    { name = "Broccoli", bossName = "Broccoli", requiredValue = 56300001, endRange = 400000000 },
-    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 2000000000 },
-    { name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 4200000000 },
-    { name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3200000001, endRange = 4000000000 },
-    { name = "Wukong Rose", bossName = "Wukong Rose", requiredValue = 4000000001, endRange = 4500000001 },
-    { name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4500000001, endRange = math.huge },
+-- === LISTES DE MISSIONS === --
+
+-- Missions par défaut (Rebirth >= 5000)
+local default_missions_Earth = {
+    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 7200 },
+    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 7201, endRange = 14000 },
+    { name = "Radish", bossName = "Radish", requiredValue = 14001, endRange = 32000 },
+    { name = "Mapa", bossName = "Mapa", requiredValue = 32000, endRange = 80000 },
+    { name = "Vegetable(Saya Saga)", bossName = "Vegetable(Saya Saga)", requiredValue = 80000, endRange = 150000 },
+    { name = "Lord Sloog", bossName = "Lord Sloog", requiredValue  = 150000  , endRange = 350000},
+    { name = "Citizen", bossName = "Citizen", requiredValue = 350000 , endRange = 900000},
+    { name = "Chilly", bossName = "Chilly", requiredValue = 900000, endRange = 2700000 },
+    { name = "No. 17", bossName = "No. 17", requiredValue = 2700000, endRange = 5000000},
+    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 5000000, endRange = 18000000},
+    { name = "Z Broccoli", bossName = "Z Broccoli", requiredValue = 18000000, endRange = 45000000},
+    { name = "Super Boo", bossName = "Super Boo", requiredValue = 45000000, endRange = 240000000},
+    { name = "Kakata(SSJ)", bossName = "Kakata(SSJ)", requiredValue = 240000000, endRange = 600000000},
+    { name = "Vills (1%)", bossName = "Vills (1%)", requiredValue = 600000000, endRange = 4000000000},
+    { name = "Omega Shenlong", bossName = "Omega Shenlong", requiredValue = 4000000000, endRange = 14000000000},
+    { name = "Gold Chilly", bossName = "Gold Chilly", requiredValue = 14000000000, endRange = 70000000000},
+    { name = "Merged Zamas", bossName = "Merged Zamas", requiredValue = 70000000000, endRange = 450000000000},
+    { name = "Broccoli", bossName = "Broccoli", requiredValue = 450000000000, endRange = math.huge},
+    
 }
 
+local default_missions_Vills = {
+    { name = "Jiran The Gray", bossName = "Jiran The Gray", requiredValue = 1200000000001, endRange = 6000000000000 },
+    { name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 6000000000001 , endRange = 50000000000000},
+    { name = "Black Chilly", bossName = "Black Chilly", requiredValue = 50000000000001 , endRange = 500000000000000 },
+    { name = "Vills (True God of Destruction)", bossName = "Vills (True God of Destruction)", requiredValue = 10000000000000, endRange = 60000000000000 },
+    { name = "Vis (Ultra Instinct)", bossName = "Vis (Ultra Instinct)", requiredValue = 500000000000001 , endRange = 1800000000000000 },
+    { name = "Xicor", bossName = "Xicor", requiredValue = 1800000000000001 , endRange = 12000000000000000 },
+    { name = "Wukong (SSJB3)", bossName = "Wukong (SSJB3)", requiredValue = 400000000000000001 , endRange = 1200000000000000000 },
+    { name = "Kakata (Ego Instinct)", bossName = "Kakata (Ego Instinct)", requiredValue = 1200000000000000001 , endRange = math.huge }
+}
+
+-- Missions pour joueurs avec peu de Rebirths (Rebirth < 5000)
+local low_rebirth_missions_Earth = {
+    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 7200 },
+    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 7201, endRange = 14000 },
+    { name = "Radish", bossName = "Radish", requiredValue = 14001, endRange = 32000 },
+    { name = "Mapa", bossName = "Mapa", requiredValue = 32000, endRange = 80000 },
+    { name = "Vegetable(Saya Saga)", bossName = "Vegetable(Saya Saga)", requiredValue = 80000, endRange = 150000 },
+    { name = "Lord Sloog", bossName = "Lord Sloog", requiredValue  = 150000  , endRange = 350000},
+    { name = "Citizen", bossName = "Citizen", requiredValue = 350000 , endRange = 900000},
+    { name = "Chilly", bossName = "Chilly", requiredValue = 900000, endRange = 2700000 },
+    { name = "No. 17", bossName = "No. 17", requiredValue = 2700000, endRange = 5000000},
+    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 5000000, endRange = 18000000},
+    { name = "Z Broccoli", bossName = "Z Broccoli", requiredValue = 18000000, endRange = 45000000},
+    { name = "Super Boo", bossName = "Super Boo", requiredValue = 45000000, endRange = 240000000},
+    { name = "Kakata(SSJ)", bossName = "Kakata(SSJ)", requiredValue = 240000000, endRange = 600000000},
+    { name = "Vills (1%)", bossName = "Vills (1%)", requiredValue = 600000000, endRange = 4000000000},
+    { name = "Omega Shenlong", bossName = "Omega Shenlong", requiredValue = 4000000000, endRange = 14000000000},
+    { name = "Gold Chilly", bossName = "Gold Chilly", requiredValue = 14000000000, endRange = 70000000000},
+    { name = "Merged Zamas", bossName = "Merged Zamas", requiredValue = 70000000000, endRange = 450000000000},
+    { name = "Broccoli", bossName = "Broccoli", requiredValue = 450000000000, endRange = math.huge},
+}
+
+local default_missions_Vills = {
+    { name = "Jiran The Gray", bossName = "Jiran The Gray", requiredValue = 1200000000000, endRange = 6000000000000 },
+    { name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 6000000000000 , endRange = 50000000000000},
+    { name = "Black Chilly", bossName = "Black Chilly", requiredValue = 50000000000000 , endRange = 500000000000000 },
+    { name = "Vills (True God of Destruction)", bossName = "Vills (True God of Destruction)", requiredValue = 10000000000000, endRange = 60000000000000 },
+    { name = "Vis (Ultra Instinct)", bossName = "Vis (Ultra Instinct)", requiredValue = 500000000000000 , endRange = 1800000000000000 },
+    { name = "Xicor", bossName = "Xicor", requiredValue = 1800000000000000 , endRange = 12000000000000000 },
+    { name = "Wukong (SSJB3)", bossName = "Wukong (SSJB3)", requiredValue = 400000000000000000 , endRange = 1200000000000000000 },
+    { name = "Kakata (Ego Instinct)", bossName = "Kakata (Ego Instinct)", requiredValue = 1200000000000000000 , endRange = math.huge }
+}
+
+-- === LOGIQUE DE SÉLECTION DES MISSIONS === --
+
+local rebirths = data:FindFirstChild("Rebirth") and data.Rebirth.Value or 0
+local useLowRebirthMissions = rebirths < 5000
+
+if game.PlaceId == 3311165597 then
+    missions = useLowRebirthMissions and low_rebirth_missions_Earth or default_missions_Earth
+elseif game.PlaceId == 5151400895 then
+    missions = useLowRebirthMissions and low_rebirth_missions_Vills or default_missions_Vills
+else
+    missions = {}
+end
+
+
+
+-- Le reste de ton code où tu utilises la liste `missions`
 local SelectedQuest
 local SelectedMob
 local isDoingAlternateQuest = false
@@ -554,75 +714,111 @@ local function BossIsAlive(mobName)
 end
 
 local function getQuestByStat(stat)
+    if not isLoop1Active then 
+        return nil, nil, nil -- Arrête la fonction si isLoop1Active est false
+    end
+    
+    local bestIndex = nil
+    local closestRequiredValue = -math.huge
+
     for i, mission in ipairs(missions) do
-        if stat >= mission.requiredValue and stat <= mission.endRange then
-            return mission.name, mission.bossName, i
+        if mission.requiredValue <= stat and mission.requiredValue > closestRequiredValue then
+            bestIndex = i
+            closestRequiredValue = mission.requiredValue
         end
     end
+
+    if bestIndex then
+        local mission = missions[bestIndex]
+        return mission.name, mission.bossName, bestIndex
+    end
+
     return nil, nil, nil
 end
 
+
 local function assignQuest()
-    local lowestStat = math.min(data.Strength.Value, data.Energy.Value, data.Defense.Value, data.Speed.Value)
+    if isLoop1Active then
+        local lowestStat = math.min(data.Strength.Value, data.Energy.Value, data.Defense.Value, data.Speed.Value)
 
-    local currentQuest, currentMob, questIndex = getQuestByStat(lowestStat)
-    local previousQuest, previousMob = nil, nil
+        local currentQuest, currentMob, questIndex = getQuestByStat(lowestStat)
+        local previousQuest, previousMob = nil, nil
 
-    if questIndex and questIndex > 1 then
-        previousQuest = missions[questIndex - 1].name
-        previousMob = missions[questIndex - 1].bossName
-    end
+        -- Vérifie si une quête précédente existe
+        if questIndex and questIndex > 1 then
+            previousQuest = missions[questIndex - 1].name
+            previousMob = missions[questIndex - 1].bossName
+        end
 
-    if not currentQuest then
-        warn("[INFO] Aucune quête disponible pour cette stat.")
-        return
-    end
+        -- Si aucune quête n'est trouvée, avertir et quitter la fonction
+        if not currentQuest then
+            
+            return
+        end
 
-    if isDoingAlternateQuest and previousQuest and BossIsAlive(previousMob) then
-        SelectedQuest = previousQuest
-        SelectedMob = previousMob
-        warn("[INFO] Passage à la quête précédente : " .. previousQuest)
+        -- Si une quête alternative est activée et que le boss précédent est toujours vivant, on passe à la quête précédente
+        if isDoingAlternateQuest and previousQuest and BossIsAlive(previousMob) then
+            SelectedQuest = previousQuest
+            SelectedMob = previousMob
+            
+        else
+            -- Sinon, on passe à la quête principale
+            SelectedQuest = currentQuest
+            SelectedMob = currentMob
+            isDoingAlternateQuest = not isDoingAlternateQuest
+            
+        end
     else
-        SelectedQuest = currentQuest
-        SelectedMob = currentMob
-        isDoingAlternateQuest = not isDoingAlternateQuest
-        warn("[INFO] Passage à la quête principale : " .. currentQuest)
+        
     end
 end
 
 local isTakingQuest = false
 
 local function startMission()
-    if isTakingQuest then return end
+    if not isLoop1Active or isTakingQuest then
+        return
+    end
+
     isTakingQuest = true
 
     pcall(function()
         local questValue = game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value
 
+        -- Vérifie si la quête sélectionnée est déjà active
         if questValue == SelectedQuest then
-            isTakingQuest = false
             return
         end
 
+        -- Recherche du NPC correspondant à la quête
         local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuest)
-        if npc and npc:FindFirstChild("HumanoidRootPart") and isLoop1Active then
+        if npc and npc:FindFirstChild("HumanoidRootPart") then
+            task.wait(3)
+            -- Téléporte le joueur devant le NPC
             player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-            task.wait()
+            task.wait(0.1)
+            
+            -- Tente d'accepter la quête
             events.Qaction:InvokeServer(npc)
-            warn("[INFO] Quête acceptée : " .. SelectedQuest)
+        else
+            warn("NPC non trouvé pour la quête :", SelectedQuest)
         end
     end)
 
-    task.wait()
+    -- Réinitialise le flag après un délai pour éviter les doubles prises
+    task.wait(0.1)
     isTakingQuest = false
 end
+
 
 task.spawn(function()
     while true do
         task.wait()
         pcall(function()
+            
             assignQuest()
-            if game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value == "" then
+            local questData = game:GetService("ReplicatedStorage").Datas:FindFirstChild(player.UserId)
+            if questData and questData:FindFirstChild("Quest") and questData.Quest.Value == ""  then
                 startMission()
             end
         end)
@@ -632,322 +828,297 @@ end)
 
 task.spawn(function()
     while true do
-        task.wait(0.5)
-        local success, fallo = pcall(function()
-            -- Si la puissance est inférieure à 2 milliards, téléporter vers Earth
-            if data.Strength.Value < 2000000000 and game.PlaceId ~= 3311165597 then
+        task.wait()
+        local success, err = pcall(function()
+            if data.Strength.Value < 120000001 and game.PlaceId ~= 3311165597 and isLoop9Active then
                 local A_1 = "Earth"
                 local Event = events.TP
-                if game.PlaceId ~= 3311165597 then  -- Vérifier si on est déjà sur Earth
+                if game.PlaceId ~= 3311165597 then
                     Event:InvokeServer(A_1)
-                    print("Teleporting to Earth")
+                    
+                    task.wait(8)
                 end
-                task.wait()  -- Attendre 8 secondes avant de réévaluer
-            -- Si la puissance est supérieure ou égale à 2 milliards, téléporter vers Vills Planet
-            elseif data.Strength.Value >= 200000000 and game.PlaceId ~= 5151400895 then
+            elseif data.Strength.Value >= 120000001  and game.PlaceId ~= 5151400895 and isLoop9Active then
                 local A_1 = "Vills Planet"
                 local Event = events.TP
-                if game.PlaceId ~= 5151400895 then  -- Vérifier si on est déjà sur Vills Planet
+                if game.PlaceId ~= 5151400895 then
                     Event:InvokeServer(A_1)
-                    print("Teleporting to Vills Planet")
+                    
+                    task.wait(8)
                 end
-                task.wait()  -- Attendre 8 secondes avant de réévaluer
             end
         end)
 
         if not success then
-            warn("Error executing teleportation: " .. fallo)
+            
         end
     end
 end)
 
 
+
+local function getObj(path)
+    local current = game
+    for _, name in ipairs(path) do
+        current = current:FindFirstChild(name)
+        if not current then
+            warn("Missing:", name)
+            return nil
+        end
+    end
+    return current
+end
+
+local targets = {
+    {"ReplicatedStorage", "Remote", "DetectAntiCheat"},
+}
+
+for _, path in ipairs(targets) do
+    local obj = getObj(path)
+    if obj then
+        obj:Destroy()
+    end
+end
+
+
+
+
+
+
+
+local events = game:GetService("ReplicatedStorage").Package.Events
 task.spawn(function()
     while true do
-        task.wait(1)
+        task.wait(51) -- Attente aléatoire entre 0 et 0.1 seconde
         if isLoop5Active then
-            local success, fallo = pcall(function()
-                game:GetService("ReplicatedStorage").Package.Events.reb:InvokeServer()
+            local success, err = pcall(function()
+                game:GetService("ReplicatedStorage").Package.Events.d:InvokeServer(true)
             end)
-
             if not success then
-                warn("Error al invocar el evento rebirth: " .. fallo)
+                
             end
         end
     end
 end)
 
 
-spawn(function()
-    while wait() do
-        pcall(function()
-            if game.Workspace.Living:FindFirstChild(targetted) then
-                repeat
-                    events.cha:InvokeServer("Blacknwhite27")
-                until false
-            end
-        end)
-    end
-end)
 
+
+
+local player = game:GetService("Players").LocalPlayer
+local targetted = player.Name
+local events = game:GetService("ReplicatedStorage").Package.Events
+local datas = game:GetService("ReplicatedStorage").Datas
 
 task.spawn(function()
-    while true do
-        task.wait()
-        task.spawn(function()
-            local player = game.Players.LocalPlayer
-            local data = game.ReplicatedStorage.Datas[player.UserId]
-            local mission = data.Quest.Value
+	while true do
+		pcall(function()
+			local targetPlayer = game.Workspace.Living:FindFirstChild(targetted)
+			local questData = datas:FindFirstChild(player.UserId)
 
-            -- Vérifier que le joueur existe bien
-            if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-                warn("⚠️ ERREUR: Le joueur ou son HumanoidRootPart est introuvable !")
-                return
-            end
-
-            -- Trouver le bon nom du boss à partir de la mission
-            local bossName
-            for _, quest in ipairs(missions) do
-                if quest.name == mission then
-                    bossName = quest.bossName
-                    break
-                end
-            end
-
-            if not bossName then
-                warn("⚠️ Aucun boss correspondant trouvé pour la mission:", mission)
-                return
-            end
-
-            -- Trouver tous les boss avec le bon nom
-            local bossCount = 0
-            for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
-                if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
-                    bossCount = bossCount + 1
-                    player.Status.Blocking.Value = false  
-
-                    -- Position fixe derrière le boss (0, 0, 4)
-                    local enemyHRP = boss.HumanoidRootPart
-                    local behindPosition = enemyHRP.CFrame * CFrame.new(0, 0, 4)
-
-                    -- Téléporter le joueur et afficher les informations
-                    player.Character.HumanoidRootPart.CFrame = behindPosition
-                    warn("✅ Joueur téléporté derrière le boss:", boss.Name, " | Position:", behindPosition.Position)
-
-                    task.wait() -- Attendre un peu avant de passer au suivant
-                end
-            end
-
-            -- Vérifier si des boss ont été trouvés
-            if bossCount == 0 then
-                warn("⚠️ Aucun boss trouvé avec le nom:", bossName)
-            else
-                warn("✅ Nombre total de boss traités:", bossCount)
-            end
-        end)
-    end
+			if targetPlayer and questData and questData:FindFirstChild("Quest") then
+				-- Tant que le joueur est vivant
+				while game.Workspace.Living:FindFirstChild(targetted) do
+					local isQuestEmpty = (questData.Quest.Value == "")
+					pcall(function()
+						events.cha:InvokeServer(isQuestEmpty, "Blacknwhite27")
+					end)
+					task.wait(0.1)
+				end
+			end
+		end)
+		task.wait(0.5)
+	end
 end)
 
 
-local player = game.Players.LocalPlayer
-
-local function enableZeroGravity(character)
-    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-    
-    local zeroGravity = Instance.new("BodyForce")
-    zeroGravity.Force = Vector3.new(0, workspace.Gravity * humanoidRootPart.AssemblyMass, 0)
-    zeroGravity.Parent = humanoidRootPart
-end
-
-local function onCharacterAdded(character)
-    -- Attendre que le personnage respawn et se charger
-    character:WaitForChild("Humanoid")
-    
-    -- Appliquer l'effet de gravité zéro
-    enableZeroGravity(character)
-    
-    -- Réactiver l'effet de gravité zéro quand le personnage meurt
-    character:WaitForChild("Humanoid").Died:Connect(function()
-        enableZeroGravity(character)
-    end)
-end
-
--- Connecter l'événement CharacterAdded pour réagir au respawn
-player.CharacterAdded:Connect(onCharacterAdded)
-
--- Si le joueur est déjà en jeu, on active immédiatement l'effet
-if player.Character then
-    onCharacterAdded(player.Character)
-end
 
 
 
-task.spawn(function()
-    while true do
-        local ldata = game.ReplicatedStorage:WaitForChild("Datas"):WaitForChild(tostring(game.Players.LocalPlayer.UserId))
 
-        if ldata.Quest.Value ~= "" then
-        game.ReplicatedStorage.Package.Events.cha:InvokeServer("Blacknwhite27")
-            game:GetService("ReplicatedStorage").Package.Events.p:FireServer("Blacknwhite27", 1)
-            game:GetService("ReplicatedStorage").Package.Events.p:FireServer("Blacknwhite27", 2)           
-        end
-
-        task.wait(0.2)
-    end
-end)
-            task.wait(0.2)
-        end)
-    end
-
-   local function loop2()
-        while true do
-            if isLoop2Active then
-    local lplr = game.Players.LocalPlayer
-    local ldata = game.ReplicatedStorage:WaitForChild("Datas"):WaitForChild(lplr.UserId)
-
-    local function format_number(number)
-        local suffixes = {"", "K", "M", "B", "T", "QD"}
-        local suffix_index = 1
-
-        while math.abs(number) >= 1000 and suffix_index < #suffixes do
-            number = number / 1000.0
-            suffix_index = suffix_index + 1
-        end
-
-        return suffix_index > 1 and string.format("%.1f%s", number, suffixes[suffix_index]) or tostring(number)
-    end
-
-local function updateStatsGui()
+local function safeBossHandler()
     local success, err = pcall(function()
-        local MainFrame = lplr.PlayerGui:WaitForChild("Main"):WaitForChild("MainFrame")
-        local StatsFrame = MainFrame:WaitForChild("Frames"):WaitForChild("Stats")
-        local ZeniLabel = MainFrame.Indicator:FindFirstChild("Zeni")
-        local Bars = MainFrame:WaitForChild("Bars")
-        local HPText = Bars.Health:FindFirstChild("TextLabel")
-        local EnergyText = Bars.Energy:FindFirstChild("TextLabel")
+        -- Vérification des prérequis
+        if not missions or #missions == 0 then return end
+        if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then return end
+        if not data or not data:FindFirstChild("Quest") then return end
 
-        local health = lplr.Character and lplr.Character:FindFirstChild("Humanoid") and lplr.Character.Humanoid.Health or 0
-        local maxHealth = lplr.Character and lplr.Character:FindFirstChild("Humanoid") and lplr.Character.Humanoid.MaxHealth or 0
-        local ki = lplr.Character and lplr.Character:FindFirstChild("Stats") and lplr.Character.Stats.Ki.Value or 0
-        local maxKi = lplr.Character and lplr.Character:FindFirstChild("Stats") and lplr.Character.Stats.Ki.MaxValue or 0
+        local mission = data.Quest.Value
+        local bossName
 
-        pcall(function()
-            HPText.Text = "HEALTH " .. format_number(health) .. " / " .. format_number(maxHealth)
-        end)
-        pcall(function()
-            EnergyText.Text = "ENERGY: " .. format_number(ki) .. " / " .. format_number(maxKi)
-        end)
-        pcall(function()
-            ZeniLabel.Text = format_number(ldata.Zeni.Value) .. " Zeni"
-        end)
-
-        for _, stat in pairs({"Strength", "Speed", "Defense", "Energy"}) do
-            local statLabel = StatsFrame:FindFirstChild(stat)
-            if statLabel then
-                pcall(function()
-                    statLabel.Text = stat .. ": " .. format_number(ldata[stat].Value)
-                end)
+        -- Détermination du boss à partir de la mission
+        for _, quest in ipairs(missions) do
+            if quest.name == mission then
+                bossName = quest.bossName
+                break
             end
+        end
+
+        if not bossName then return end
+
+        local bossCount = 0
+
+        -- Recherche des boss vivants correspondants
+        for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
+            if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                bossCount += 1
+
+                -- Active le blocage
+                if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
+                    player.Status.Blocking.Value = true
+                end
+
+                -- Positionnement derrière le boss
+                local behindPosition = boss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+                player.Character.HumanoidRootPart.CFrame = behindPosition
+            end
+        end
+
+        -- Traitements si besoin selon bossCount
+        if bossCount == 0 then
+            -- Aucun boss en vie, possibilité d'attendre ou passer à autre chose
+        else
+            -- Boss trouvé, actions possibles ici
         end
     end)
 
     if not success then
-        warn("Error al actualizar GUI de estadísticas:", err)
+        warn("Erreur dans safeBossHandler:", err)
     end
 end
 
-pcall(function()
-    updateStatsGui()
-end)
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    if lplr.Character and lplr.Character:FindFirstChild("Humanoid") and isLoop2Active then
-        pcall(function()
-            updateStatsGui()
-        end)
+-- Boucle sécurisée sans récursion directe
+task.spawn(function()
+    while true do
+        safeBossHandler()
+        task.wait(0.4)
     end
 end)
-            end
-            task.wait(.5)
-        end
-    end
-
-    local function loop3()
-        pcall(function()
-            task.spawn(function()
-                while true do
-                    task.wait()
-    
-                    local success, fallo = pcall(function()
-                        local Forms = {'Ego Instinct','Divine Blue','Divine Rose Prominence','Astral Instinct','Ultra Ego','SSJB4','True God of Creation','True God of Destruction','Super Broly', 
-                                       'LSSJG','LSSJ4','SSJG4','LSSJ3','Mystic Kaioken','LSSJ Kaioken','SSJR3','SSJB3','God Of Destruction','God Of Creation',
-                                       'Jiren Ultra Instinct', 'Mastered Ultra Instinct','Godly SSJ2', 'Ultra Instinct Omen', 'Evil SSJ','Blue Evolution',
-                                       'Dark Rose','Kefla SSJ2','SSJ Berserker','True Rose', 'SSJB Kaioken','SSJ Rose', 'SSJ Blue','Corrupt SSJ',
-                                       'SSJ Rage','SSJG','SSJ4','Mystic','LSSJ','SSJ3','Spirit SSJ','SSJ2 Majin','SSJ2','SSJ Kaioken','SSJ','FSSJ','Kaioken'}
-    
-                        local equipRemote = game:GetService("ReplicatedStorage").Package.Events.equipskill
-                        local taRemote = game:GetService("ReplicatedStorage").Package.Events.ta
-                        local player = game:GetService("Players").LocalPlayer
-                        local stats = player.Character:WaitForChild("Stats")
-    
-                        -- Vérification des stats pour autoriser la transformation
-                        if stats.Strength.Value > 5000 and stats.Defense.Value > 5000 and stats.Energy.Value > 5000 and stats.Speed.Value > 5000 then
-                            local currentTransfo = player.Status.Transformation.Value
-                            local bestTransfo = nil
-    
-                            -- Trouver la meilleure transformation disponible selon les stats
-                            for _, v in ipairs(Forms) do
-                                if equipRemote:InvokeServer(v) then
-                                    bestTransfo = v
-                                    break
-                                end
-                            end
-    
-                            -- Vérifier si une meilleure transformation est disponible
-                            if bestTransfo and bestTransfo ~= currentTransfo then
-                                -- Vérifie si le joueur est déjà transformé avant de se détransformer
-                                if currentTransfo ~= "" then
-                                    taRemote:InvokeServer() -- Se détransformer
-                                    task.wait()
-                                end
-    
-                                -- Équiper la nouvelle transformation
-                                equipRemote:InvokeServer(bestTransfo)
-                                task.wait()
-    
-                                -- Vérifier si l'équipement a fonctionné avant de tenter de se transformer
-                                if player.Status.Transformation.Value == bestTransfo then
-                                    taRemote:InvokeServer() -- Se transformer avec la nouvelle transformation
-                                else
-                                    warn("Échec de l'équipement de la transformation : " .. tostring(bestTransfo))
-                                end
-                            end
-                        end
-                    end)
-    
-                    if not success then
-                        warn(fallo)
-                    end
-                end
-            end)
-        end)
-    end
-    
-    
-    
 
 
-    local function loop5()
-        while true do
-            pcall(function()
-                if isLoop3Active then
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
-local lplr = Players.LocalPlayer
+task.spawn(function()
+	while true do
+		task.wait(0.3)
+
+		if isLoop10Active then
+			pcall(function()
+				local PaidForms = {
+                'True SSJG','Blanco','CSSJB3','SSJ6','SSJB4','SSJR4','LSSJ5','True God of Creation','True God of Destruction','CSSJB2','CSSJB','Super Broly',
+                'LSSJB','False God of Destruction','False God of Creation','SSJG4','LSSJ4','LSSJ3','Mystic Kaioken','LSSJ2','LSSJ Kaioken','SSJ2 Kaioken'
+
+
+				}
+
+				local player = game:GetService("Players").LocalPlayer
+				local character = player.Character or player.CharacterAdded:Wait()
+                local rs = game:GetService("ReplicatedStorage").Package.Events
+
+				-- Si on meurt, on attend le respawn du perso
+				if not character:FindFirstChild("Stats") then
+					character = player.CharacterAdded:Wait()
+					character:WaitForChild("Stats")
+				end
+
+				local stats = character:FindFirstChild("Stats")
+				local status = player:WaitForChild("Status")
+
+				if stats and stats:FindFirstChild("Strength") and stats.Strength.Value > 5000
+					and stats.Defense.Value > 5000 and stats.Energy.Value > 5000 and stats.Speed.Value > 5000 then
+
+					local current = status.Transformation.Value
+					local best
+
+					for _, form in ipairs(PaidForms) do
+						if rs.equipskill:InvokeServer(form) then
+							best = form
+							break
+						end
+					end
+
+					if best and best ~= current then
+						if current ~= "" then
+							rs.Higoobera:InvokeServer()
+							task.wait()
+						end
+						rs.equipskill:InvokeServer(best)
+						task.wait()
+						if status.Transformation.Value == best then
+							rs.Higoober:InvokeServer()
+						end
+					elseif best == current and not status.Transforming.Value then
+						rs.Higoober:InvokeServer()
+					end
+				end
+			end)
+		end
+	end
+end)
+
+
+
+task.spawn(function()
+	while true do
+		task.wait(0.6)
+		if isLoop8Active then
+			pcall(function()
+				local Forms = {
+                    'Ego Instinct','SSJR3','SSJB3','SSJ5','Divine Rose Prominence','Divine Blue','God of Destruction','God of Creation',
+                    'Beast','Ultra Ego','Mastered Ultra Instinct','SSJR2','SSJB2','Ultra Instinct Omen','Evil SSJ','Blue Evolution',
+					'Dark Rose','Kefla SSJ2','SSJ Berserker','True Rose','SSJB Kaioken','SSJ Rose','SSJ Blue','Corrupt SSJ',
+					'SSJ Rage','SSJG','SSJ4','Mystic','LSSJ','SSJ3','Spirit SSJ','SSJ2 Majin','SSJ2','SSJ Kaioken','SSJ','FSSJ','Kaioken'
+				}
+
+				local rs = game:GetService("ReplicatedStorage").Package.Events
+				local player = game:GetService("Players").LocalPlayer
+				local character = player.Character or player.CharacterAdded:Wait()
+
+				-- Si on meurt, on attend le respawn du perso
+				if not character:FindFirstChild("Stats") then
+					character = player.CharacterAdded:Wait()
+					character:WaitForChild("Stats")
+				end
+
+				local stats = character:FindFirstChild("Stats")
+				local status = player:WaitForChild("Status")
+
+				if stats and stats:FindFirstChild("Strength") and stats.Strength.Value > 5000
+					and stats.Defense.Value > 5000 and stats.Energy.Value > 5000 and stats.Speed.Value > 5000 then
+
+					local current = status.Transformation.Value
+					local best
+
+					for _, form in ipairs(Forms) do
+						if rs.equipskill:InvokeServer(form) then
+							best = form
+							break
+						end
+					end
+
+					if best and best ~= current then
+						if current ~= "" then
+							rs.Higoober:InvokeServer()
+							task.wait()
+						end
+						rs.equipskill:InvokeServer(best)
+						task.wait()
+						if status.Transformation.Value == best then
+							rs.Higoober:InvokeServer()
+						end
+					elseif best == current and not status.Transforming.Value then
+						rs.Higoober:InvokeServer()
+					end
+				end
+			end)
+		end
+	end
+end)
+
+
+
 
 pcall(function()
+    if isloop3Active then
     if lplr.PlayerGui:FindFirstChild("Start") then
         ReplicatedStorage.Package.Events.Start:InvokeServer()
 
@@ -975,539 +1146,178 @@ pcall(function()
             lplr.PlayerGui.Main.bruh.Enabled = true
         end)
     end
+end
 end)
-                    local s = game.Players.LocalPlayer.PlayerGui.Main.MainFrame.Frames.Quest
-s.Visible = false
-s.Position = UDim2.new(0.01, 0, 0.4, 0)
 
-spawn(function()
-    while true do
-        local success, err = pcall(function()
-            s.Position = UDim2.new(2, 0, 0, 0)
-            task.wait(0.4)
-        end)
 
-        if not success then
-            warn("Error en loop5: " .. err)
-        end
-        task.wait()
-    end
+
+
+task.spawn(function()
+	while true do
+		task.wait(0.7)
+
+		if not isLoop7Active then
+			continue
+		end
+
+		local lplr = game.Players.LocalPlayer
+		local character = lplr.Character
+		if not character then continue end
+
+		local stats = character:FindFirstChild("Stats")
+		local humanoid = character:FindFirstChild("Humanoid")
+		if not stats or not humanoid then continue end
+		if humanoid.Health <= 0 then continue end 
+
+		local Ki = stats:FindFirstChild("Ki")
+		if not Ki then continue end
+
+		for _, player in ipairs(game.Players:GetPlayers()) do
+			local ldata = game.ReplicatedStorage.Datas:FindFirstChild(player.UserId)
+			if not ldata or not ldata:FindFirstChild("Quest") then continue end
+
+			if ldata.Quest.Value ~= ""
+				and ldata:FindFirstChild("Strength") and ldata.Strength.Value > 400000
+				and ldata:FindFirstChild("Energy") and ldata.Energy.Value > 400000
+				and ldata:FindFirstChild("Defense") and ldata.Defense.Value > 400000
+				and ldata:FindFirstChild("Speed") and ldata.Speed.Value > 400000
+			then
+				local playerChar = player.Character
+				local hrp = playerChar and playerChar:FindFirstChild("HumanoidRootPart")
+				if not hrp then continue end
+
+				local closestBoss, closestDistance = nil, math.huge
+				for _, v in ipairs(game.Workspace.Living:GetChildren()) do
+					if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
+						local dist = (hrp.Position - v.HumanoidRootPart.Position).Magnitude
+						if dist < closestDistance and v.Humanoid.Health > 0 and v.Name ~= playerChar.Name then
+							closestDistance, closestBoss = dist, v
+						end
+					end
+				end
+
+				if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
+					local attacks = {
+						"Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
+						"Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge",
+						function()
+							game.ReplicatedStorage.Package.Events.voleys:InvokeServer("Energy Volley", {
+								FaceMouse = false,
+								MouseHit = CFrame.new()
+							}, "Blacknwhite27")
+						end
+					}
+
+					for _, attack in ipairs(attacks) do
+						task.spawn(function()
+							if typeof(attack) == "string" then
+								game.ReplicatedStorage.Package.Events.mel:InvokeServer(attack, "Blacknwhite27")
+							elseif typeof(attack) == "function" then
+								attack()
+							end
+						end)
+					end
+				end
+			end
+		end
+	end
 end)
-                end
-            end)
-            task.wait(1)
-        end
-    end
 
-    local function loop6()
-        pcall(function()
-firstquest = true
-autostack = false
 
-local Settings = {Tables = {Forms = {}}; Variables = {Farm = false}}
-setmetatable(Settings, {__index = function() warn('Dumbass') end})
 
-local equipRemote = game:GetService("ReplicatedStorage").Package.Events.equipskill
+
 local player = game.Players.LocalPlayer
-local data = game.ReplicatedStorage.Datas[player.UserId]
-local events = game:GetService("ReplicatedStorage").Package.Events
-local rs = game:GetService("RunService")
+local datas = game:GetService("ReplicatedStorage"):WaitForChild("Datas")
+local events = game:GetService("ReplicatedStorage"):WaitForChild("Package"):WaitForChild("Events")
 
-local quests = {
-    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 25000 },
-    { name = "Oozaru", bossName = "Oozaru", requiredValue = 25000, endRange = math.huge },
-}
-
-function target()
-    local success, fallo = pcall(function()
-        targetted = game:GetService("Players").LocalPlayer.Name
-    end)
-
-    if not success then
-        warn("Error en target: " .. fallo)
-    end
-end
-
-target()
-
-local function autoquest()
-    local success, fallo = pcall(function()
-        repeat
-            task.wait(0.1)  -- Pequeño retraso para evitar la sobrecarga
-        until game.workspace.Living[targetted]
-
-        local a, b, c, d = data.Strength.Value, data.Energy.Value, data.Defense.Value, data.Speed.Value
-        local smallest = math.min(a, b, c, d)
-
-        for _, quest in ipairs(quests) do
-            if smallest >= quest.requiredValue and smallest <= quest.endRange then
-                SelectedQuests = quest.name
-                SelectedMobs = quest.bossName
-                break
-            end
-        end
-
-        if firstquest then
-            lastquest = SelectedQuests
-            firstquest = false
-        end
-
-        if autostack and smallest > 8000 then
-            if lastquest ~= SelectedQuests and isLoop6Active then
-                game.workspace.Living[targetted].UpperTorso:Destroy()
-                getgenv().stacked = false
-                repeat
-                    task.wait(0.5)  -- Pausa entre cada ciclo
-                until player.Character.Humanoid.Health > 0
-            end
-            lastquest = SelectedQuests
-        end
-    end)
-
-    if not success then
-        warn("Error en autoquest: " .. fallo)
-    end
-end
-
-
-getgenv().stacked = false
-
-local function quest()
-    local success, fallo = pcall(function()
-        local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuests)
-
-        if game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value ~= SelectedQuests and isLoop6Active then
-            if npc and npc:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = npc.HumanoidRootPart.CFrame
-                local args = {npc} -- Se pasa el NPC encontrado como argumento
-                game:GetService("ReplicatedStorage").Package.Events.Qaction:InvokeServer(unpack(args))
-            end
-        end
-    end)
-
-    if not success then
-        warn("Error en quest: " .. fallo)
-    end
-end
-
-task.spawn(autoquest)
-task.spawn(quest)
-
-local function tpToBoss(boss)
-    local success, fallo = pcall(function()
-        if player.Character:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("HumanoidRootPart") then
-            player.Character.HumanoidRootPart.CFrame = boss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
-        end
-    end)
-
-    if not success then
-        warn("Error en tpToBoss: " .. fallo)
-    end
-end
-
-task.spawn(function()
-    while true do
-        task.wait()
+local function safePunchLoop()
+    -- Lancer une boucle dans une tâche deferred
+    task.defer(function()
         pcall(function()
-            while true do
-                task.wait()
-                if game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                    for i, v in ipairs(game:GetService("Workspace").Living:GetChildren()) do
-                        autoquest()
-                        if v.Name:lower() == SelectedMobs:lower() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and isLoop6Active then
-                            quest()
-                            getgenv().farm = true
-                            repeat
-                                task.wait()
-                                player.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
-                            until getgenv().farm == false or v == nil or v.Humanoid.Health <= 0 or player.Character.Humanoid.Health <= 0
-                            if player.Character.Humanoid.Health <= 0 then
-                                getgenv().farm = false
-                                getgenv().stacked = false
-                                repeat
-                                    task.wait()
-                                until player.Character.Humanoid.Health >= 0
-                                task.wait()
-                            end
-                        end
-                    end
-                end
+            local ldata = datas:FindFirstChild(player.UserId)
+            if ldata and ldata:FindFirstChild("Quest") and ldata.Quest.Value ~= "" then
+                -- Effectuer des actions dans l'event FireServer
+                events.p:FireServer("Blacknwhite27", 1)
+                events.p:FireServer("Blacknwhite27", 2)
             end
         end)
-    end
-end)
+        
+        -- Attendre 0.6 secondes avant de relancer la boucle
+        task.wait(0.6)
+        -- Relancer la fonction après 0.6 secondes
+        safePunchLoop()
+    end)
+end
 
 
-task.spawn(function()
-    while true do
-        task.wait(0.4)
-        local succes,fallo = pcall(function()
-            if data.Strength.Value >= 25000 and game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value == "" and isLoop6Active then
-                local kidNohag = game:GetService("Workspace").Others.NPCs["Kid Nohag"]
-                if kidNohag and kidNohag:FindFirstChild("HumanoidRootPart") and isLoop6Active then
-                    player.Character.HumanoidRootPart.CFrame = kidNohag.HumanoidRootPart.CFrame
-                    local args = { kidNohag }
-                    game:GetService("ReplicatedStorage").Package.Events.Qaction:InvokeServer(unpack(args)) -- Inicia la misión
-                end
-            end
-        end)
-        if not succes then
-            warn(fallo)
-        end
-    end
-end)
 
-task.spawn(function()
-    while true do
-        task.wait(0.3)
-        local succes, fallo = pcall(function()
-            if isLoop6Active then
-                local currentGameHour = math.floor(game.Lighting.ClockTime)
-                local playerCount = #game.Players:GetPlayers()
-                if currentGameHour >= 6 and currentGameHour < 12 then
-                    game.ReplicatedStorage.Package.Events.TP:InvokeServer("Earth")
-                elseif playerCount > 1 then
-                    game.ReplicatedStorage.Package.Events.TP:InvokeServer("Earth")
-                end                
-            end
-        end)
-        if not succes then
-            warn(fallo)
-        end
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if isLoop6Active then
-            task.wait(0.1)
-
-
-            local yo = game.Players.LocalPlayer
-            local mission = ReplicatedStorage.Datas[yo.UserId].Quest
-
-
-            if not mission or mission.Value == "" then
-                task.wait(.05)  
-                continue
-            end
-
-            local currentGameHour = math.floor(game.Lighting.ClockTime)
-
-            if currentGameHour >= 20 or currentGameHour < 6 then
-                continue  
-            end
-
-            local success, fallo = pcall(function()
-                local maxDist = 50
-                local bossName = "Halloween Boss"
-
-                yo.Character:SetPrimaryPartCFrame(CFrame.new(-35233.1953125, 18.168001174926758, -28942.220703125))
-
-                local boss = nil
-                for _, v in ipairs(game.Workspace.Living:GetChildren()) do
-                    if v:IsA("Model") and v.Name == bossName and v:FindFirstChild("HumanoidRootPart") then
-                        if (yo.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude <= maxDist then
-                            boss = v
-                            break
-                        end
-                    end
-                end
-
-                yo.Character:SetPrimaryPartCFrame(boss and CFrame.new(boss.HumanoidRootPart.Position) or CFrame.new(-35233.1953125, 18.168001174926758, -28942.220703125))
+switchButton1.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop1Active = not isLoop1Active
+                toggleSwitch(isLoop1Active, switchBall1)
+                SaveSwitchState(isLoop1Active, "Switch1")
             end)
-
-            if not success then
-                warn("Error al invocar el evento rebirth: " .. fallo)
-            end
-        end
-        task.wait(0.1)
-    end
-end)
-
-task.spawn(function()
-    local tpCount = 0
-
-    while true do
-        local currentGameHour = math.floor(game.Lighting.ClockTime)
-
-        if currentGameHour == 20 and tpCount < 2 then
-            if tpCount == 0 then
-                local success, errorMsg = pcall(function()
-                    game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-41388.765625, 92.34290313720703, -29013.48046875))
-                end)
-                if success then
-                    tpCount = tpCount + 1
-                    task.wait(5)
-                    if tpCount == 1 then
-                        local success2, errorMsg2 = pcall(function()
-                            game.Players.LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(-41388.765625, 92.34290313720703, -29013.48046875))
-                        end)
-                        if not success2 then
-                            warn("Error al realizar el segundo teletransporte: " .. errorMsg2)
-                        else
-                            tpCount = tpCount + 1
-                        end
-                    end
-                else
-                    warn("Error al realizar el primer teletransporte: " .. errorMsg)
-                end
-            end
-        end
-
-        task.wait(0.1)
-    end
-end)
-
-            task.wait(.1)
-    end)
-end
-
-local function loop7()
-pcall(function()
-    task.spawn(function()
-    -- Espera 12 segundos antes de comenzar
-    task.wait()
-
-    while true do
-        task.wait()
-
-        if isLoop7Active then  -- Verifica si el bucle está activo
-
-            task.spawn(function()
-                for _, player in ipairs(game.Players:GetPlayers()) do
-                    local ldata = game.ReplicatedStorage.Datas[player.UserId]
-                    local lplr = game.Players.LocalPlayer
-                    local Ki = lplr.Character:WaitForChild("Stats"):WaitForChild("Ki")
-                    local humanoid = lplr.Character:WaitForChild("Humanoid")
-
-
-                    task.spawn(function()
-                        if ldata.Quest.Value ~= "" and ldata.Strength.Value > 400000 and ldata.Energy.Value > 400000 and ldata.Defense.Value > 400000 and ldata.Speed.Value > 400000 then
-                            local closestBoss, closestDistance = nil, math.huge
-                            local playerPos = player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character.HumanoidRootPart.Position or nil
-
-                            if playerPos then
-                                task.spawn(function()
-                                    for _, v in ipairs(game.Workspace.Living:GetChildren()) do
-                                        if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                                            local distance = (playerPos - v.HumanoidRootPart.Position).magnitude
-                                            if distance < closestDistance and v.Humanoid.Health > 0 and v.Name ~= player.Character.Name then
-                                                closestDistance, closestBoss = distance, v
-                                            end
-                                        end
-                                    end
-                                end)
-
-                                task.spawn(function()
-                                    if closestBoss and closestDistance <= 5 and closestBoss.Humanoid.Health > 0 then
-                                        local attacks = {
-                                            
-                                                "Super Dragon Fist", "God Slicer", "Spirit Barrage", "Mach Kick",
-                                                "Wolf Fang Fist", "High Power Rush", "Meteor Strike", "Meteor Charge", 
-                                          
-                                            function() 
-                                                game.ReplicatedStorage.Package.Events.voleys:InvokeServer("Energy Volley", {FaceMouse = false, MouseHit = CFrame.new()}, "Blacknwhite27")
-                                            end
-                                        }
-
-                                        for _, attackName in ipairs(attacks) do
-                                            task.spawn(function() 
-                                                if type(attackName) == "string" then
-                                                    game.ReplicatedStorage.Package.Events.mel:InvokeServer(attackName, "Blacknwhite27")
-                                                elseif type(attackName) == "function" then
-                                                    attackName()
-                                                end
-                                            end)
-                                        end
-                                    end
-                                end)
-                            else
-                                warn("Error: No se pudo encontrar la posición del jugador.")
-                            end
-                        end
-                    end)
-                end
+        end)
+        
+        switchButton3.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop3Active = not isLoop3Active
+                toggleSwitch(isLoop3Active, switchBall3)
+                SaveSwitchState(isLoop3Active, "Switch3")
             end)
+        end)
+        
+        switchButton5.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop5Active = not isLoop5Active
+                toggleSwitch(isLoop5Active, switchBall5)
+                SaveSwitchState(isLoop5Active, "Switch5")
+            end)
+        end)
+        
+        switchButton7.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop7Active = not isLoop7Active
+                toggleSwitch(isLoop7Active, switchBall7)
+                SaveSwitchState(isLoop7Active, "Switch7")
+            end)
+        end)
+        
+        switchButton8.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop8Active = not isLoop8Active
+                toggleSwitch(isLoop8Active, switchBall8)
+                SaveSwitchState(isLoop8Active, "Switch8")
+            end)
+        end)
+        
+        switchButton9.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop9Active = not isLoop9Active
+                toggleSwitch(isLoop9Active, switchBall9)
+                SaveSwitchState(isLoop9Active, "Switch9")
+            end)
+        end)
 
-            task.wait(0.05)
-        end
-    end
-end)
-        task.wait(.2) -- Aumentar la espera entre iteraciones principales para reducir la frecuencia de ejecuciÃ³n
-    end)
+        switchButton10.MouseButton1Click:Connect(function()
+            pcall(function()
+                isLoop10Active = not isLoop10Active
+                toggleSwitch(isLoop10Active, switchBall10)
+                SaveSwitchState(isLoop10Active, "Switch10")
+            end)
+        end)
+        
+        -- Assure-toi que les valeurs initiales sont définies pour chaque variable
+        toggleSwitch(isLoop1Active, switchBall1)
+        toggleSwitch(isLoop3Active, switchBall3)
+        toggleSwitch(isLoop5Active, switchBall5)
+        toggleSwitch(isLoop7Active, switchBall7)
+        toggleSwitch(isLoop8Active, switchBall8)
+        toggleSwitch(isLoop9Active, switchBall9)
+        toggleSwitch(isLoop10Active, switchBall10)
+    
 end
-
-
-    switchButton1.MouseButton1Click:Connect(function()
-        pcall(function()
-            isLoop1Active = not isLoop1Active
-            toggleSwitch(isLoop1Active, switchBall1)
-            SaveSwitchState(isLoop1Active, "Switch1")
-        end)
-    end)
-
-
-    switchButton3.MouseButton1Click:Connect(function()
-    pcall(function()
-    isLoop3Active = not isLoop3Active
-    toggleSwitch(isLoop3Active, switchBall3)
-    SaveSwitchState(isLoop3Active, "Switch3")
-    end)
-end)
-
-    switchButton5.MouseButton1Click:Connect(function()
-        pcall(function()
-            isLoop5Active = not isLoop5Active
-            toggleSwitch(isLoop5Active, switchBall5)
-            SaveSwitchState(isLoop5Active, "Switch5")
-        end)
-    end)
-
-
-    switchButton7.MouseButton1Click:Connect(function()
-        pcall(function()
-            isLoop7Active = not isLoop7Active
-            toggleSwitch(isLoop7Active, switchBall7)
-            SaveSwitchState(isLoop7Active, "Switch7")
-        end)
-    end)
-
-    toggleSwitch(isLoop1Active, switchBall1)
-    toggleSwitch(isLoop3Active, switchBall3)
-    toggleSwitch(isLoop5Active, switchBall5)
-    toggleSwitch(isLoop7Active, switchBall7)
-
-    coroutine.wrap(loop1)()
-    coroutine.wrap(loop3)()
-    coroutine.wrap(loop5)()
-    coroutine.wrap(loop7)()
-end
-
 initSwitches(MenuPanel)
-
 MainButton.MouseButton1Click:Connect(function()
     pcall(togglePanel)
 end)
-
-earthButton.MouseButton1Click:Connect(function()
-    pcall(function()
-        local playerCount = #game.Players:GetPlayers()
-        print("Número de jugadores: " .. playerCount)  -- Para depuración
-        if playerCount > 3 then
-            game:GetService("TeleportService"):Teleport(3311165597, game.Players.LocalPlayer)
-        elseif playerCount < 3 then
-            game.ReplicatedStorage.Package.Events.TP:InvokeServer("Earth")
-        end
-    end)
-end)
-
-billsButton.MouseButton1Click:Connect(function()
-    pcall(function()
-        local playerCount = #game.Players:GetPlayers()
-        print("Número de jugadores: " .. playerCount)  -- Para depuración
-        if playerCount > 3 then
-            game:GetService("TeleportService"):Teleport(5151400895, game.Players.LocalPlayer)
-        elseif playerCount < 3 then
-            game.ReplicatedStorage.Package.Events.TP:InvokeServer("Vills Planet")
-        end
-    end)
-end)
-
-hbtcButton.MouseButton1Click:Connect(function()
-    pcall(function() game.ReplicatedStorage.Package.Events.TP:InvokeServer("Hyperbolic Time Chamber") end)
-end)
-
-hbtgvButton.MouseButton1Click:Connect(function()
-    pcall(function() game.ReplicatedStorage.Package.Events.TP:InvokeServer("Gravity Room") end)
-end)
-
-farmButton.MouseButton1Click:Connect(function()
-    pcall(onFarmButtonClick)
-end)
-
-formsButton.MouseButton1Click:Connect(function()
-    pcall(onFormsButtonClick)
-end)
-
-local function Cal()
-    local function updateFPS()
-        local count, lastUpdate = 0, tick()
-
-        RunService.RenderStepped:Connect(function()
-            count = count + 1
-            if tick() - lastUpdate >= 1 then
-                pcall(function() 
-                    fpsTextLabel.Text = "FPS: " .. count
-                end)
-                count, lastUpdate = 0, tick()
-            end
-        end)
-    end
-
-    local function Serverping()
-        local success, servers = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
-        end)
-        if not success then return "Error" end
-
-        local bestPing = math.huge
-        for _, server in ipairs(servers) do
-            local ping = math.min((function() 
-                local start = tick() 
-                RunService.Stepped:wait() 
-                return (tick() - start) * 1000 
-            end)(), 1500)
-            if ping < bestPing then 
-                bestPing, bestId = ping, server.id 
-            end
-        end
-        return bestPing < math.huge and math.floor(bestPing) .. "/Srv.." or "N/A"
-    end
-
-    button.MouseButton1Click:Connect(function()
-        pcall(function() 
-            if bestId and #game.Players:GetPlayers() > 2 then
-                TeleportService:TeleportToPlaceInstance(game.PlaceId, bestId) 
-            end
-        end)
-    end)
-
-    local function updateBallColor()
-    local currentHour = math.floor(game.Lighting.ClockTime)
-    local currentMinute = math.floor((game.Lighting.ClockTime % 1) * 60)
-
-    pcall(function()
-        if currentHour == 15 and currentMinute >= 40 then
-            ballFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Morado brillante
-        elseif currentHour == 15 and currentMinute >= 0 and currentMinute < 40 then
-            if (tick() % 1) < 0.5 then
-                ballFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 255) -- Amarillo brillante
-            else
-                ballFrame.BackgroundColor3 = Color3.fromRGB(255, 0, 255) -- Morado brillante
-            end
-        else
-            ballFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Amarillo brillante
-        end
-
-        task.spawn(function()
-            local bb = game:service 'VirtualUser'
-            game:service 'Players'.LocalPlayer.Idled:connect(function()
-                bb:CaptureController()
-                bb:ClickButton2(Vector2.new())
-            end)
-        end)
-    end)
-end
-
-
-end
-
-pcall(Cal)
-pcall(showPlayerThumbnail)
-
- end)
-
-if not success then
-    warn("Error en la inicialización: " .. tostring(fail))
-end 
