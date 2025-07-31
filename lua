@@ -938,7 +938,7 @@ local function safeBossHandler()
         if currentBoss and currentBoss:FindFirstChild("HumanoidRootPart") then
             -- Active le blocage (défense)
             if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
-                player.Status.Blocking.Value = true
+                player.Status.Blocking.Value = false
             end
 
             -- Position derrière le boss
