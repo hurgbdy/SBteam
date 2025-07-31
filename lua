@@ -771,19 +771,16 @@ local function startMission()
     pcall(function()
         local questValue = game:GetService("ReplicatedStorage").Datas[player.UserId].Quest.Value
 
-        -- Si la quête est déjà prise (ou vide), on attend 4 secondes avant de pouvoir relancer
-        if questValue == SelectedQuest or questValue == "" then
-            task.wait(4)  -- <-- Ici, on attend 4 secondes
-            isTakingQuest = false  -- Débloque la possibilité de relancer la mission
-            return
-        end
+        if questValue == SelectedQuest then return end
 
         local npc = game:GetService("Workspace").Others.NPCs:FindFirstChild(SelectedQuest)
         if npc and npc:FindFirstChild("HumanoidRootPart") then
-            task.wait(0)
+            task.wait(4)
 
+            -- Position devant le NPC
             local targetCFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
 
+            -- Déplacement en douceur
             safeTeleportTo(targetCFrame)
 
             task.wait(0.1)
