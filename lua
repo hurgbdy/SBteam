@@ -2,8 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 
--- Utilise une variable locale au lieu de getgenv()
-local RebhookUrl = "https://discord.com/api/webhooks/1364700504323526706/q-nMc_83sAl-HbQz1SynNEWlDOaehHaH2XDN7w3254bD8U0khngJFV_5sqOEoA61a6fB"
+local RebhookUrl = "https://discord.com/api/webhooks/..."
 
 local function formatNumber(number)
     local suffixes = {"", "K", "M", "B", "T", "QD", "QN", "Sx", "Sp"}
@@ -18,7 +17,7 @@ end
 local function sendWebhook(content)
     local data = {
         ["username"] = "SB Team",
-        ["avatar_url"] = "https://cdn.discordapp.com/attachments/1224314198658650242/1356356158587408394/IMG_0507.png",
+        ["avatar_url"] = "https://cdn.discordapp.com/attachments/...",
         ["content"] = content
     }
 
@@ -57,69 +56,56 @@ end
 
 logStats()
 
-
-wait(0.5)
-
+task.wait(0.5)
 game.Workspace.Gravity = 1
 
-local ba = Instance.new("ScreenGui")
-local ca = Instance.new("TextLabel")
-local da = Instance.new("Frame")
-local _b = Instance.new("TextLabel")
-local ab = Instance.new("TextLabel")
-
-local Players = game:WaitForChild("Players")
 local player = Players.LocalPlayer
 
--- Attendre que PlayerGui soit bien disponible
-while not player:FindFirstChild("PlayerGui") do
-    task.wait()
-end
+-- Attendre PlayerGui
+while not player:FindFirstChild("PlayerGui") do task.wait() end
 
--- Crée un ScreenGui et l'attache à PlayerGui
+-- Création GUI
 local ba = Instance.new("ScreenGui")
 ba.Name = "AntiAfkGui"
+ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ba.Parent = player:WaitForChild("PlayerGui")
 
-
-ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
--- Titre principal
+local ca = Instance.new("TextLabel")
 ca.Parent = ba
 ca.Active = true
-ca.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
+ca.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 ca.Transparency = 1
 ca.Draggable = true
-ca.Position = UDim2.new(0.698610067, 0, 0.098096624, 0)
+ca.Position = UDim2.new(0.698, 0, 0.098, 0)
 ca.Size = UDim2.new(0, 370, 0, 52)
 ca.Font = Enum.Font.SourceSansSemibold
 ca.Text = "Anti Afk"
 ca.TextColor3 = Color3.new(0, 1, 1)
 ca.TextSize = 22
 
--- Cadre inférieur
+local da = Instance.new("Frame")
 da.Parent = ca
 da.Transparency = 1
-da.BackgroundColor3 = Color3.new(0.196078, 0.196078, 0.196078)
-da.Position = UDim2.new(0, 0, 1.0192306, 0)
+da.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+da.Position = UDim2.new(0, 0, 1.02, 0)
 da.Size = UDim2.new(0, 370, 0, 107)
 
--- Label "Made by"
+local _b = Instance.new("TextLabel")
 _b.Parent = da
 _b.Transparency = 1
-_b.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
-_b.Position = UDim2.new(0, 0, 0.800455689, 0)
+_b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+_b.Position = UDim2.new(0, 0, 0.80, 0)
 _b.Size = UDim2.new(0, 370, 0, 21)
 _b.Font = Enum.Font.Arial
 _b.Text = "Made by SbTeam"
 _b.TextColor3 = Color3.new(0, 1, 1)
 _b.TextSize = 20
 
--- Label de statut
+local ab = Instance.new("TextLabel")
 ab.Parent = da
 ab.Transparency = 1
-ab.BackgroundColor3 = Color3.new(0.176471, 0.176471, 0.176471)
-ab.Position = UDim2.new(0, 0, 0.158377, 0)
+ab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ab.Position = UDim2.new(0, 0, 0.158, 0)
 ab.Size = UDim2.new(0, 370, 0, 44)
 ab.Font = Enum.Font.ArialBold
 ab.Text = "Status: Active"
@@ -127,15 +113,15 @@ ab.TextColor3 = Color3.new(0, 1, 1)
 ab.TextSize = 20
 
 -- Anti-AFK
-local bb = game:GetService("VirtualUser")
-
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
-    bb:CaptureController()
-    bb:ClickButton2(Vector2.new())
+local vu = game:GetService("VirtualUser")
+player.Idled:Connect(function()
+    vu:CaptureController()
+    vu:ClickButton2(Vector2.new())
     ab.Text = "Roblox tried kicking you but I didn't let them!"
-    wait(2)
+    task.wait(2)
     ab.Text = "Status: Active"
 end)
+
 
 
 
