@@ -623,24 +623,13 @@ local missions = {}
 
 -- Missions par défaut (Rebirth >= 5000)
 local default_missions_Earth = {
-    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 7200 },
-    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 7201, endRange = 14000 },
-    { name = "Radish", bossName = "Radish", requiredValue = 14001, endRange = 32000 },
-    { name = "Mapa", bossName = "Mapa", requiredValue = 32000, endRange = 80000 },
-    { name = "Vegetable(Saya Saga)", bossName = "Vegetable(Saya Saga)", requiredValue = 80000, endRange = 150000 },
-    { name = "Lord Sloog", bossName = "Lord Sloog", requiredValue  = 150000  , endRange = 350000},
-    { name = "Citizen", bossName = "Citizen", requiredValue = 350000 , endRange = 900000},
-    { name = "Chilly", bossName = "Chilly", requiredValue = 900000, endRange = 2700000 },
-    { name = "No. 17", bossName = "No. 17", requiredValue = 2700000, endRange = 5000000},
-    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 5000000, endRange = 18000000},
-    { name = "Z Broccoli", bossName = "Z Broccoli", requiredValue = 18000000, endRange = 45000000},
-    { name = "Super Boo", bossName = "Super Boo", requiredValue = 45000000, endRange = 240000000},
-    { name = "Kakata(SSJ)", bossName = "Kakata(SSJ)", requiredValue = 240000000, endRange = 600000000},
-    { name = "Vills (1%)", bossName = "Vills (1%)", requiredValue = 600000000, endRange = 4000000000},
-    { name = "Omega Shenlong", bossName = "Omega Shenlong", requiredValue = 4000000000, endRange = 14000000000},
-    { name = "Gold Chilly", bossName = "Gold Chilly", requiredValue = 14000000000, endRange = 70000000000},
-    { name = "Merged Zamas", bossName = "Merged Zamas", requiredValue = 70000000000, endRange = 450000000000},
-    { name = "Broccoli", bossName = "Broccoli", requiredValue = 450000000000, endRange = math.huge},
+    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 20000 },
+    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 20001, endRange = 100000 },
+    { name = "Radish", bossName = "Radish", requiredValue = 100001, endRange = 3500000 },
+    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 3500001, endRange = 10000000 },
+    { name = "SSJB Wukong", bossName = "SSJB Wukong", requiredValue = 10000001, endRange = 56300000 },
+    { name = "Broccoli", bossName = "Broccoli", requiredValue = 56300001, endRange = 400000000 },
+    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 2000000000 },
     
 }
 
@@ -657,35 +646,21 @@ local default_missions_Vills = {
 
 -- Missions pour joueurs avec peu de Rebirths (Rebirth < 5000)
 local low_rebirth_missions_Earth = {
-    { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 7200 },
-    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 7201, endRange = 14000 },
-    { name = "Radish", bossName = "Radish", requiredValue = 14001, endRange = 32000 },
-    { name = "Mapa", bossName = "Mapa", requiredValue = 32000, endRange = 80000 },
-    { name = "Vegetable(Saya Saga)", bossName = "Vegetable(Saya Saga)", requiredValue = 80000, endRange = 150000 },
-    { name = "Lord Sloog", bossName = "Lord Sloog", requiredValue  = 150000  , endRange = 350000},
-    { name = "Citizen", bossName = "Citizen", requiredValue = 350000 , endRange = 900000},
-    { name = "Chilly", bossName = "Chilly", requiredValue = 900000, endRange = 2700000 },
-    { name = "No. 17", bossName = "No. 17", requiredValue = 2700000, endRange = 5000000},
-    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 5000000, endRange = 18000000},
-    { name = "Z Broccoli", bossName = "Z Broccoli", requiredValue = 18000000, endRange = 45000000},
-    { name = "Super Boo", bossName = "Super Boo", requiredValue = 45000000, endRange = 240000000},
-    { name = "Kakata(SSJ)", bossName = "Kakata(SSJ)", requiredValue = 240000000, endRange = 600000000},
-    { name = "Vills (1%)", bossName = "Vills (1%)", requiredValue = 600000000, endRange = 4000000000},
-    { name = "Omega Shenlong", bossName = "Omega Shenlong", requiredValue = 4000000000, endRange = 14000000000},
-    { name = "Gold Chilly", bossName = "Gold Chilly", requiredValue = 14000000000, endRange = 70000000000},
-    { name = "Merged Zamas", bossName = "Merged Zamas", requiredValue = 70000000000, endRange = 450000000000},
-    { name = "Broccoli", bossName = "Broccoli", requiredValue = 450000000000, endRange = math.huge},
+     { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 20000 },
+    { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 20001, endRange = 100000 },
+    { name = "Radish", bossName = "Radish", requiredValue = 100001, endRange = 3500000 },
+    { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 3500001, endRange = 10000000 },
+    { name = "SSJB Wukong", bossName = "SSJB Wukong", requiredValue = 10000001, endRange = 56300000 },
+    { name = "Broccoli", bossName = "Broccoli", requiredValue = 56300001, endRange = 400000000 },
+    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 2000000000 },
 }
 
 local default_missions_Vills = {
-    { name = "Jiran The Gray", bossName = "Jiran The Gray", requiredValue = 1200000000000, endRange = 6000000000000 },
-    { name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 6000000000000 , endRange = 50000000000000},
-    { name = "Black Chilly", bossName = "Black Chilly", requiredValue = 50000000000000 , endRange = 500000000000000 },
-    { name = "Vills (True God of Destruction)", bossName = "Vills (True God of Destruction)", requiredValue = 10000000000000, endRange = 60000000000000 },
-    { name = "Vis (Ultra Instinct)", bossName = "Vis (Ultra Instinct)", requiredValue = 500000000000000 , endRange = 1800000000000000 },
-    { name = "Xicor", bossName = "Xicor", requiredValue = 1800000000000000 , endRange = 12000000000000000 },
-    { name = "Wukong (SSJB3)", bossName = "Wukong (SSJB3)", requiredValue = 400000000000000000 , endRange = 1200000000000000000 },
-    { name = "Kakata (Ego Instinct)", bossName = "Kakata (Ego Instinct)", requiredValue = 1200000000000000000 , endRange = math.huge }
+    { name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 4200000000 },
+    { name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3200000001, endRange = 4000000000 },
+    { name = "Wukong Rose", bossName = "Wukong Rose", requiredValue = 4000000001, endRange = 4500000001 },
+    { name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4500000001, endRange = math.huge },
+
 }
 
 -- === LOGIQUE DE SÉLECTION DES MISSIONS === --
