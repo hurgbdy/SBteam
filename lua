@@ -71,7 +71,8 @@ local ab = Instance.new("TextLabel")
 local player = game.Players.LocalPlayer
 
 ba.Name = "AntiAfkGui"
-ba.Parent = Player.PlayerGui
+ba.Parent = player.PlayerGui
+
 ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- Titre principal
@@ -130,7 +131,7 @@ end)
 
 
 
-local MenuPanel = Player.PlayerGui:FindFirstChild("SB team")
+local MenuPanel = player.PlayerGui:FindFirstChild("SB team")
 local playerCount = game.Players:GetPlayers()
 -- Initialisation des services
 local player = game.Players.LocalPlayer
