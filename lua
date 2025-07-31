@@ -843,17 +843,6 @@ local function getObj(path)
     return current
 end
 
-local targets = {
-    {"ReplicatedStorage", "Remote", "DetectAntiCheat"},
-}
-
-for _, path in ipairs(targets) do
-    local obj = getObj(path)
-    if obj then
-        obj:Destroy()
-    end
-end
-
 
 
 
@@ -866,7 +855,7 @@ task.spawn(function()
         task.wait(51) -- Attente aléatoire entre 0 et 0.1 seconde
         if isLoop5Active then
             local success, err = pcall(function()
-                game:GetService("ReplicatedStorage").Package.Events.d:InvokeServer(true)
+                game:GetService("ReplicatedStorage").Package.Events.d:InvokeServer()
             end)
             if not success then
                 
@@ -884,25 +873,6 @@ local targetted = player.Name
 local events = game:GetService("ReplicatedStorage").Package.Events
 local datas = game:GetService("ReplicatedStorage").Datas
 
-task.spawn(function()
-	while true do
-		pcall(function()
-			local targetPlayer = game.Workspace.Living:FindFirstChild(targetted)
-			local questData = datas:FindFirstChild(player.UserId)
-
-			if targetPlayer and questData and questData:FindFirstChild("Quest") then
-				-- Tant que le joueur est vivant
-				while game.Workspace.Living:FindFirstChild(targetted) do
-					pcall(function()
-						events.cha:InvokeServer("Blacknwhite27")
-					end)
-					task.wait(0.2)
-				end
-			end
-		end)
-		task.wait(0.5)
-	end
-end)
 
 
 
@@ -973,7 +943,7 @@ end)
 
 task.spawn(function()
 	while true do
-		task.wait(0.3)
+		task.wait(1)
 
 		if isLoop10Active then
 			pcall(function()
@@ -1128,7 +1098,7 @@ end)
 
 task.spawn(function()
 	while true do
-		task.wait(0.7)
+		task.wait(0.2)
 
 		if not isLoop7Active then
 			continue
