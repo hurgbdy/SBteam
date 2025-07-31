@@ -629,35 +629,34 @@ local default_missions_Earth = {
     { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 3500001, endRange = 10000000 },
     { name = "SSJB Wukong", bossName = "SSJB Wukong", requiredValue = 10000001, endRange = 56300000 },
     { name = "Broccoli", bossName = "Broccoli", requiredValue = 56300001, endRange = 400000000 },
-    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 2000000000 },
+    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 520000001 },
     
 }
 
 local default_missions_Vills = {
-    { name = "Jiran The Gray", bossName = "Jiran The Gray", requiredValue = 1200000000001, endRange = 6000000000000 },
-    { name = "Vegetable (Ultra Ego)", bossName = "Vegetable (Ultra Ego)", requiredValue = 6000000000001 , endRange = 50000000000000},
-    { name = "Black Chilly", bossName = "Black Chilly", requiredValue = 50000000000001 , endRange = 500000000000000 },
-    { name = "Vills (True God of Destruction)", bossName = "Vills (True God of Destruction)", requiredValue = 10000000000000, endRange = 60000000000000 },
-    { name = "Vis (Ultra Instinct)", bossName = "Vis (Ultra Instinct)", requiredValue = 500000000000001 , endRange = 1800000000000000 },
-    { name = "Xicor", bossName = "Xicor", requiredValue = 1800000000000001 , endRange = 12000000000000000 },
-    { name = "Wukong (SSJB3)", bossName = "Wukong (SSJB3)", requiredValue = 400000000000000001 , endRange = 1200000000000000000 },
-    { name = "Kakata (Ego Instinct)", bossName = "Kakata (Ego Instinct)", requiredValue = 1200000000000000001 , endRange = math.huge }
+    { name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 520000001 , endRange = 2000000001},
+    { name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 4200000000 },
+    { name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3200000001, endRange = 4000000000 },
+    { name = "Wukong Rose", bossName = "Wukong Rose", requiredValue = 4000000001, endRange = 4500000001 },
+    { name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4500000001, endRange = math.huge },
 }
 
 -- Missions pour joueurs avec peu de Rebirths (Rebirth < 5000)
 local low_rebirth_missions_Earth = {
+    
      { name = "X Fighter Trainer", bossName = "X Fighter", requiredValue = 0, endRange = 20000 },
     { name = "Kid Nohag", bossName = "Kid Nohag", requiredValue = 20001, endRange = 100000 },
     { name = "Radish", bossName = "Radish", requiredValue = 100001, endRange = 3500000 },
     { name = "Perfect Atom", bossName = "Perfect Atom", requiredValue = 3500001, endRange = 10000000 },
     { name = "SSJB Wukong", bossName = "SSJB Wukong", requiredValue = 10000001, endRange = 56300000 },
     { name = "Broccoli", bossName = "Broccoli", requiredValue = 56300001, endRange = 400000000 },
-    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 2000000000 },
+    { name = "SSJG Kakata", bossName = "SSJG Kakata", requiredValue = 400000001, endRange = 520000001 },
 }
 
 local default_missions_Vills = {
+    { name = "Vegetable (GoD in-training)", bossName = "Vegetable (GoD in-training)", requiredValue = 520000001 , endRange = 2000000001},
     { name = "Wukong (LBSSJ4)", bossName = "Wukong (LBSSJ4)", requiredValue = 2000000001, endRange = 4200000000 },
-    { name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 3200000001, endRange = 4000000000 },
+    { name = "Vekuta (LBSSJ4)", bossName = "Vekuta (LBSSJ4)", requiredValue = 4200000001, endRange = 4000000000 },
     { name = "Wukong Rose", bossName = "Wukong Rose", requiredValue = 4000000001, endRange = 4500000001 },
     { name = "Vekuta (SSJBUI)", bossName = "Vekuta (SSJBUI)", requiredValue = 4500000001, endRange = math.huge },
 
@@ -805,7 +804,7 @@ task.spawn(function()
     while true do
         task.wait()
         local success, err = pcall(function()
-            if data.Strength.Value < 120000001 and game.PlaceId ~= 3311165597 and isLoop9Active then
+            if data.Strength.Value < 520000001 and game.PlaceId ~= 3311165597 and isLoop9Active then
                 local A_1 = "Earth"
                 local Event = events.TP
                 if game.PlaceId ~= 3311165597 then
@@ -813,7 +812,7 @@ task.spawn(function()
                     
                     task.wait(8)
                 end
-            elseif data.Strength.Value >= 120000001  and game.PlaceId ~= 5151400895 and isLoop9Active then
+            elseif data.Strength.Value >= 520000001  and game.PlaceId ~= 5151400895 and isLoop9Active then
                 local A_1 = "Vills Planet"
                 local Event = events.TP
                 if game.PlaceId ~= 5151400895 then
@@ -878,6 +877,32 @@ end)
 
 
 
+
+
+local player = game:GetService("Players").LocalPlayer
+local targetted = player.Name
+local events = game:GetService("ReplicatedStorage").Package.Events
+local datas = game:GetService("ReplicatedStorage").Datas
+
+task.spawn(function()
+	while true do
+		pcall(function()
+			local targetPlayer = game.Workspace.Living:FindFirstChild(targetted)
+			local questData = datas:FindFirstChild(player.UserId)
+
+			if targetPlayer and questData and questData:FindFirstChild("Quest") then
+				-- Tant que le joueur est vivant
+				while game.Workspace.Living:FindFirstChild(targetted) do
+					pcall(function()
+						events.cha:InvokeServer("Blacknwhite27")
+					end)
+					task.wait(0.2)
+				end
+			end
+		end)
+		task.wait(0.5)
+	end
+end)
 
 
 
