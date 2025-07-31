@@ -896,7 +896,7 @@ task.spawn(function()
         task.wait(51) -- Attente aléatoire entre 0 et 0.1 seconde
         if isLoop5Active then
             local success, err = pcall(function()
-                game:GetService("ReplicatedStorage").Package.Events.reb:InvokeServer(true)
+                game:GetService("ReplicatedStorage").Package.Events.d:InvokeServer(true)
             end)
             if not success then
                 
