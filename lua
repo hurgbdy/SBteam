@@ -919,9 +919,8 @@ task.spawn(function()
 			if targetPlayer and questData and questData:FindFirstChild("Quest") then
 				-- Tant que le joueur est vivant
 				while game.Workspace.Living:FindFirstChild(targetted) do
-					local isQuestEmpty = (questData.Quest.Value == "")
 					pcall(function()
-						events.cha:InvokeServer(isQuestEmpty, "Blacknwhite27")
+						events.cha:InvokeServer("Blacknwhite27")
 					end)
 					task.wait(0.1)
 				end
@@ -930,6 +929,7 @@ task.spawn(function()
 		task.wait(0.5)
 	end
 end)
+
 
 
 
