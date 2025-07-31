@@ -68,10 +68,19 @@ local da = Instance.new("Frame")
 local _b = Instance.new("TextLabel")
 local ab = Instance.new("TextLabel")
 
-local player = game.Players.LocalPlayer
+local Players = game:WaitForChild("Players")
+local player = Players.LocalPlayer
 
+-- Attendre que PlayerGui soit bien disponible
+while not player:FindFirstChild("PlayerGui") do
+    task.wait()
+end
+
+-- Crée un ScreenGui et l'attache à PlayerGui
+local ba = Instance.new("ScreenGui")
 ba.Name = "AntiAfkGui"
-ba.Parent = player.PlayerGui
+ba.Parent = player:WaitForChild("PlayerGui")
+
 
 ba.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
