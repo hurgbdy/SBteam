@@ -130,7 +130,7 @@ end)
 
 
 
-local MenuPanel = game.CoreGui:FindFirstChild("SB team")
+local MenuPanel = Player.PlayerGui:FindFirstChild("SB team")
 local playerCount = game.Players:GetPlayers()
 -- Initialisation des services
 local player = game.Players.LocalPlayer
