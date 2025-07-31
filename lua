@@ -1211,7 +1211,7 @@ task.spawn(function()
 					for _, attack in ipairs(attacks) do
 						task.spawn(function()
 							if typeof(attack) == "string" then
-								game.ReplicatedStorage.Package.Events.mel:InvokeServer(attack, "Blacknwhite27")
+								game.ReplicatedStorage.Package.Events.letsplayagame:InvokeServer(attack, "Blacknwhite27")
 							elseif typeof(attack) == "function" then
 								attack()
 							end
