@@ -880,32 +880,6 @@ end)
 
 
 
-local player = game:GetService("Players").LocalPlayer
-local targetted = player.Name
-local events = game:GetService("ReplicatedStorage").Package.Events
-local datas = game:GetService("ReplicatedStorage").Datas
-
-task.spawn(function()
-	while true do
-		pcall(function()
-			local targetPlayer = game.Workspace.Living:FindFirstChild(targetted)
-			local questData = datas:FindFirstChild(player.UserId)
-
-			if targetPlayer and questData and questData:FindFirstChild("Quest") then
-				-- Tant que le joueur est vivant
-				while game.Workspace.Living:FindFirstChild(targetted) do
-					pcall(function()
-						events.cha:InvokeServer("Blacknwhite27")
-					end)
-					task.wait(0.1)
-				end
-			end
-		end)
-		task.wait(0.5)
-	end
-end)
-
-
 
 
 
