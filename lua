@@ -888,6 +888,7 @@ local datas = game:GetService("ReplicatedStorage").Datas
 
 
 local TweenService = game:GetService("TweenService")
+local currentBoss = nil
 
 local function tweenTo(targetCFrame)
     local character = player.Character
@@ -895,8 +896,9 @@ local function tweenTo(targetCFrame)
     if not hrp then return end
 
     local distance = (hrp.Position - targetCFrame.Position).Magnitude
-    local time = math.clamp(distance / 25, 0.3, 1.5) -- Adapté au combat
+    if distance < 1 then return end -- déjà proche, ne rien faire
 
+    local time = math.clamp(distance / 25, 0.3, 1.5)
     local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(hrp, tweenInfo, {CFrame = targetCFrame})
     tween:Play()
@@ -921,27 +923,29 @@ local function safeBossHandler()
 
         if not bossName then return end
 
-        local bossCount = 0
-
-        for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
-            if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
-                bossCount += 1
-
-                -- Active le blocage (défense)
-                if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
-                    player.Status.Blocking.Value = true
+        -- Si le boss actuel n’est plus valide (mort ou supprimé)
+        if not currentBoss or not currentBoss.Parent or not currentBoss:FindFirstChild("Humanoid") or currentBoss.Humanoid.Health <= 0 then
+            currentBoss = nil -- reset
+            -- Recherche d’un nouveau boss valide
+            for _, boss in ipairs(game.Workspace.Living:GetChildren()) do
+                if boss.Name == bossName and boss:FindFirstChild("HumanoidRootPart") and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+                    currentBoss = boss
+                    break
                 end
-
-                -- Calcul position derrière le boss
-                local behindPosition = boss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
-
-                -- Mouvement fluide
-                tweenTo(behindPosition)
             end
         end
 
-        -- BossCount > 0 : ici tu peux ajouter autre chose si nécessaire
+        -- Si on a un boss actif valide
+        if currentBoss and currentBoss:FindFirstChild("HumanoidRootPart") then
+            -- Active le blocage (défense)
+            if player:FindFirstChild("Status") and player.Status:FindFirstChild("Blocking") then
+                player.Status.Blocking.Value = true
+            end
 
+            -- Position derrière le boss
+            local behindCFrame = currentBoss.HumanoidRootPart.CFrame * CFrame.new(0, 0, 4)
+            tweenTo(behindCFrame)
+        end
     end)
 
     if not success then
